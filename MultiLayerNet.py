@@ -16,10 +16,27 @@ class MultiLayerNet:
 		self.update = update
 
 	def fit(self,X,y,n_iter=1000):
-		
+		'''
+		Parameters:
+		-----------
+		X:	numpy ndarray, required
+			M x d data matrix, M = # of training instances, d = # of features
+		y:	numpy ndarray, required
+			M x k target array, k = # of classes
+		n_iter:	number of iterations, optional (default = 1000)
+				integer
+
+		Returns:
+		--------
+		None
+
+		Updates:
+		--------
+		weights: list of ndarray matrices corresponding to the weights of the neural network
+		'''
 		# the matrix multiplications just look prettier this way...
 		X = X.T
-		y = y.T 
+		y = y.T
 
 		d = X.shape[0] # input (layer) size
 		k = y.shape[0] # output (layer) size
