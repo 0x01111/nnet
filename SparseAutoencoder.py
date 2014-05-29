@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import fmin_l_bfgs_b
+from scipy.optimize import fmin_l_bfgs_b	
 
 class SparseAutoencoder:
 	''' Sparse autoencoder, based on andrew ng's notes from CS229 '''
@@ -15,8 +15,18 @@ class SparseAutoencoder:
 		self.decay_cost = []
 		self.sparse_cost = []
 
+	def print_init_settings(self):
+		''' Prints initialization settings '''
+
+		print 'Sparse Autoencoder settings:'
+		print '----------------------------'
+		print 'Number of hidden units: ',self.n_hid
+		print 'Beta coefficient of sparsity: ',self.beta
+		print 'Rho value for desired sparsity level: ',self.rho
+		print 'Lambda decay coefficient: ',self.decay
+
 	def logit(self,z):
-		"""Computes the element-wise logit of z"""		
+		''' Computes the element-wise logit of z '''		
 		return 1./(1. + np.exp(-1.*z))
 
 	def fit(self,X):
@@ -26,6 +36,15 @@ class SparseAutoencoder:
 		-----------
 		X:	numpy ndarray, required
 			M x d data matrix, M = # of training instances, d = # of features
+
+		Returns:
+		--------
+		None
+
+		Updates:
+		--------
+
+
 		'''
 		X = X.T
 
@@ -46,8 +65,10 @@ class SparseAutoencoder:
 		w0 = self.unroll(self.w_i2h,self.w_h2o) # flatten weight matrices to a single vector
 		res = fmin_l_bfgs_b(self.compute_cost,w0,self.compute_gradient,(X,)) # apply lbfgs to find optimal weight vector
 		w_i2h,w_h2o = self.reroll(res[0]) # re-roll to weight matrices
-		
-		print 'Information:'
+
+		print 'Optimization Information:'
+		print '-------------------------'
+		print 'Technique: LBFGS'
 		print 'Convergence: ',res[2]['warnflag']
 		if res[2]==2:
 			print 'Task: ',res[2]['task']
@@ -140,15 +161,61 @@ class SparseAutoencoder:
 		return (main_cost + decay_cost + sparse_cost)
 		
 	def plot_costs(self):
+		''' Keeps track of the different cost function values per iteration '''
+		
 		total_cost = [m+d+s for m,d,s in zip(self.main_cost,self.decay_cost,self.sparse_cost)]
 		r_iter = range(len(total_cost))
-		plt.plot(r_iter,self.main_cost,'r')
-		plt.plot(r_iter,self.decay_cost,'g')
-		plt.plot(r_iter,self.sparse_cost,'b')
+		
+		# plot the individual terms of the cost, and the total
+		plt.plot(r_iter,self.main_cost,color='red',label='Mean-Squared Error (MSE) term')
+		plt.plot(r_iter,self.decay_cost,color='green',label='Regularization term')
+		plt.plot(r_iter,self.sparse_cost,color='blue',label='Sparsity penalty term')
+		plt.plot(r_iter,total_cost,color='black',label='Total cost')
 		plt.xlabel('Iteration #')
 		plt.ylabel('Cost function')
 		plt.title('Cost function for each optimization iteration')
+		plt.legend()
 		plt.show()
+
+		def check_gradients(self,X,gradient):
+		'''Computes a finite difference approximation of the gradient to check the correction of 
+		the backpropagation algorithm'''
+
+		m = X.shape[1] # number of training cases in this batch of data
+		
+		err_tol = 1e-8	# tolerance
+		eps = 1e-5	# epsilon (for numerical gradient computation)
+
+		# Numerical computation of the gradient..but checking every single derivative is 
+		# cumbersome, so just check a few of them
+		n = self.w_i2h.shape() + self.w_h2o.shape() # total number of parameters
+ 		idx = np.random.permutation(n)[:(n/10)] # choose a random 10% 
+ 		apprx_d = [None]*len(idx)
+
+		for i,x in enumerate(idx):
+			w_plus = self.unroll(self.w_i2h,self.w_h2o)
+			w_minus = self.unroll(self.w_i2h,self.w_h2o)
+			
+			# Perturb one of the weights by eps
+			w_plus[x] += eps
+			w_minus[x] -= eps
+			w_i2h_plus,w_h2o_plus = self.reroll(w_plus)
+			w_i2h_minus,w_h2o_minus = self.reroll(w_minus)
+
+			# run fprop and compute the loss for both sides  
+			act = self.fprop(X,weights_plus)
+			lossPlus = self.compute_loss(act[-1], y, weights_plus)
+			act = self.fprop(X,weights_minus)
+			lossMinus = self.compute_loss(act[-1], y, weights_minus)
+			
+			apprxDerv[i] = 1.0*(lossPlus-lossMinus)/(2*eps) # ( E(weights[i]+eps) - E(weights[i]-eps) )/(2*eps)
+			
+		# Compute difference between numerical and backpropagated derivatives
+		cerr = np.mean(np.abs(apprxDerv-gradient[idx]))
+		if(cerr>=err_tol):
+			print 'Mean computed error ',cerr,' is larger than the error tolerance -- there is probably an error in the computation'
+		else:
+			print 'Mean computed error ',cerr,' is smaller than the error tolerance -- the computation was probably correct'
 
 	def transform(self,X):
 		''' Returns the sparse representation of the feature vectors'''

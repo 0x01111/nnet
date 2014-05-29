@@ -11,8 +11,13 @@ print 'Loading MNIST training data...'
 X = data['training_inputs'].T
 print 'Number of training examples: ',X.shape[0]
 print 'Dimensionality of feature vectors: ',X.shape[1]
+
+n_hid = 50
+beta = 0.1,
+rho = 0.005 
+decay=0.001
+
 s = sae.SparseAutoencoder() # initialize the sparse autoencoder (using default values for now)
+s.print_init_settings() # print out what settings we're using
 X_tfm = s.fit(X).transform(X) # fit and transform the data
 s.plot_costs()
-# print 'Mean feature value of original feature vectors: ',np.mean(X,axis=0)
-# print 'Mean feature value of sparse feature vectors: ',np.mean(X_tfm,axis=0)
