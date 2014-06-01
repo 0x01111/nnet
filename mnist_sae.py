@@ -8,9 +8,9 @@ data = scipy.io.loadmat('training_data.mat')
 
 # # Training...
 print 'Loading MNIST training data...'
-X = data['training_inputs'].T
-print 'Number of training examples: ',X.shape[0]
-print 'Dimensionality of feature vectors: ',X.shape[1]
+X = data['training_inputs']
+print 'Number of training examples: ',X.shape[1]
+print 'Dimensionality of feature vectors: ',X.shape[0]
 
 n_hid = 50
 beta = 0.1,

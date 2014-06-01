@@ -20,7 +20,7 @@ class MultiLayerNet:
 		Parameters:
 		-----------
 		X:	numpy ndarray, required
-			M x d data matrix, M = # of training instances, d = # of features
+			d x M data matrix, M = # of training instances, d = # of features
 		y:	numpy ndarray, required
 			M x k target array, k = # of classes
 		n_iter:	number of iterations, optional (default = 1000)
@@ -34,9 +34,6 @@ class MultiLayerNet:
 		--------
 		weights: list of ndarray matrices corresponding to the weights of the neural network
 		'''
-		# the matrix multiplications just look prettier this way...
-		X = X.T
-		y = y.T
 
 		d = X.shape[0] # input (layer) size
 		k = y.shape[0] # output (layer) size
@@ -47,9 +44,9 @@ class MultiLayerNet:
 
 		# initialize weights randomly
 		n_nodes = [d]+self.n_hid+[k] # concatenate the input and output layers
-		self.weights = []
+		self._weights = []
 		for n1,n2 in zip(n_nodes[:-1],n_nodes[1:]):
-			self.weights.append(0.01*np.random.rand(n1+1,n2))
+			self._weights.append(0.01*np.random.rand(n1+1,n2))
 		
 		accum_grad = []
 		# needed for momentum, improved_momentum
@@ -67,17 +64,17 @@ class MultiLayerNet:
 				# gradient values from previous iteration
 				last_grad.append(np.ones([n1+1,n2]))
 		else:
-			gain = len(self.weights)*[1.0]
+			gain = len(self._weights)*[1.0]
 
 		# uncomment for gradient checking
-		# grad_vector = np.empty(sum([w.size for w in self.weights]))
+		# grad_vector = np.empty(sum([w.size for w in self._weights]))
 
 		# uses the scipy routine for conjugate gradient
 		if self.update == 'conjugate_gradient':
-			w0 = self.unroll(self.weights)
+			w0 = self.unroll(self._weights)
 			wf = fmin_cg(self.compute_cost,w0,self.compute_gradient,(X,y))
 			weights = self.reroll(wf)
-			self.weights = weights
+			self._weights = weights
 
 		else:
 			for i in range(n_iter):
@@ -86,7 +83,7 @@ class MultiLayerNet:
 				
 				if self.update=='improved_momentum':
 					# take a step first in the direction of the accumulated gradient
-					self.weights = [w+a for w,a in zip(self.weights,accum_grad)]
+					self._weights = [w+a for w,a in zip(self._weights,accum_grad)]
 
 				# propagate the data 
 				act = self.fprop(X[:,idx]) # get the activations from forward propagation
@@ -106,18 +103,18 @@ class MultiLayerNet:
 
 				# simple gradient-descent
 				if self.update=='default':
-					self.weights = [self.weights[i]-self.learn_rate*g*d for i,(d,g) in enumerate(zip(grad,gain))]
+					self._weights = [self._weights[i]-self.learn_rate*g*d for i,(d,g) in enumerate(zip(grad,gain))]
 				
 				# momentum
 				elif self.update=='momentum':
 					for i,(d,g) in enumerate(zip(grad,gain)):
 						accum_grad[i] = self.alpha*accum_grad[i] + d
-						self.weights[i] -= self.learn_rate*g*accum_grad[i]
+						self._weights[i] -= self.learn_rate*g*accum_grad[i]
 				
 				# improved momentum
 				elif self.update=='improved_momentum':
 					for i,(d,g) in enumerate(zip(grad,gain)):
-						self.weights[i] -= self.learn_rate*g*d
+						self._weights[i] -= self.learn_rate*g*d
 						accum_grad[i] = self.alpha*(accum_grad[i] - self.learn_rate*g*d)
 			
 		return self
@@ -126,7 +123,7 @@ class MultiLayerNet:
 		"""Perform forward propagation"""
 
 		if weights==None:
-			weights = self.weights
+			weights = self._weights
 
 		m = X.shape[1] # number of training cases in this batch of data
 		act = [np.append(np.ones([1,m]),self.logit(np.dot(weights[0].T,X)),axis=0)] # use the first data matrix to compute the first activation
@@ -140,7 +137,7 @@ class MultiLayerNet:
 		"""Performs backpropagation"""
 
 		if weights==None:
-			weights = self.weights
+			weights = self._weights
 
 		# reversing the lists makes it easier to work with 					
 		weights = weights[::-1]
@@ -203,7 +200,7 @@ class MultiLayerNet:
 		"""Computes the cross entropy classification (with weight decay)"""
 		
 		if weights is None:
-			weights = self.weights
+			weights = self._weights
 		return self.compute_class_loss(act,y) + 0.5*self.decay*sum([np.sum(w**2) for w in weights])
 
 	def unroll(self,weights):
@@ -218,7 +215,7 @@ class MultiLayerNet:
 
 		idx = 0
 		r_weights = []
-		for w in self.weights:
+		for w in self._weights:
 			r_weights.append(np.reshape(v[idx:idx+w.size],w.shape))
 			idx+=w.size
 		
@@ -228,48 +225,6 @@ class MultiLayerNet:
 		""" imposes a range on all values of a matrix """
 		return np.fmax(minv,np.fmin(maxv,a))
 
-	def check_gradients(self,X,y,gradient):
-		"""Computes a finite difference approximation of the gradient to check the correction of 
-		the backpropagation algorithm"""
-
-		m = X.shape[1] # number of training cases in this batch of data
-		
-		err_tol = 1e-8	# tolerance
-		eps = 1e-5	# epsilon (for numerical gradient computation)
-
-		# Numerical computation of the gradient..but checking every single derivative is 
-		# cumbersome, check 20% of the values
-		n = sum(np.size(w) for w in self.weights)
- 		idx = np.random.permutation(n)[:(n/10)] # choose a random 10% 
- 		apprxDerv = [None]*len(idx)
-
-		for i,x in enumerate(idx):
-			W_plus = self.unroll(self.weights)
-			W_minus = self.unroll(self.weights)
-			
-			# Perturb one of the weights by eps
-			W_plus[x] += eps
-			W_minus[x] -= eps
-			weights_plus = self.reroll(W_plus)
-			weights_minus = self.reroll(W_minus)
-
-			# run fprop and compute the loss for both sides  
-			act = self.fprop(X,weights_plus)
-			lossPlus = self.compute_loss(act[-1], y, weights_plus)
-			act = self.fprop(X,weights_minus)
-			lossMinus = self.compute_loss(act[-1], y, weights_minus)
-			
-			apprxDerv[i] = 1.0*(lossPlus-lossMinus)/(2*eps) # ( E(weights[i]+eps) - E(weights[i]-eps) )/(2*eps)
-			
-		# Compute difference between numerical and backpropagated derivatives
-		cerr = np.mean(np.abs(apprxDerv-gradient[idx]))
-		if(cerr>=err_tol):
-			print 'Mean computed error ',cerr,' is larger than the error tolerance -- there is probably an error in the computation'
-		else:
-			print 'Mean computed error ',cerr,' is smaller than the error tolerance -- the computation was probably correct'
-
-	# The following are convenience functions for doing batch-optimization using routines from 
-	# scipy (e.g, fmin_cg)
 
 	def compute_gradient(self,w,X,y):
 		""" Computation of the gradient """
