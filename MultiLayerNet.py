@@ -162,8 +162,6 @@ class MultiLayerNet:
 	def predict(self,X,y=None):
 		"""Uses fprop for predicting labels of data. If labels are also provided, also returns mce """
 
-		X = X.T
-		y = y.T
 		m = X.shape[1]
 		X = np.append(np.ones([1,m]),X,axis=0)
 		act = self.fprop(X)
