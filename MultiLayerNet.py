@@ -15,6 +15,19 @@ class MultiLayerNet:
 		self.batch_size = batch_size
 		self.update = update
 
+	def print_init_settings(self):
+		''' Prints initialization settings '''
+
+		print 'Multilayer network settings:'
+		print '----------------------------'
+		print 'Number of layers: ',np.size(self.n_hid)
+		print 'Number of hidden units per layer: ',self.n_hid
+		print 'Alpha coefficient of viscosity: ',self.alpha
+		print 'Learning rate: ',self.learn_rate
+		print 'Adaptive learning rate flag: ',self.adaptive
+		print 'Batch size: ',self.batch_size
+		print 'Network update rule: ',self.update
+
 	def fit(self,X,y,n_iter=1000):
 		'''
 		Parameters:
@@ -120,7 +133,7 @@ class MultiLayerNet:
 		return self
 
 	def fprop(self,X,weights=None):
-		"""Perform forward propagation"""
+		'''Perform forward propagation'''
 
 		if weights==None:
 			weights = self._weights
@@ -134,7 +147,7 @@ class MultiLayerNet:
 		return act
 
 	def bprop(self,X,y,act,weights=None):
-		"""Performs backpropagation"""
+		'''Performs backpropagation'''
 
 		if weights==None:
 			weights = self._weights
@@ -160,7 +173,7 @@ class MultiLayerNet:
 		return grad[::-1]
 		
 	def predict(self,X,y=None):
-		"""Uses fprop for predicting labels of data. If labels are also provided, also returns mce """
+		'''Uses fprop for predicting labels of data. If labels are also provided, also returns mce '''
 
 		m = X.shape[1]
 		X = np.append(np.ones([1,m]),X,axis=0)
@@ -177,39 +190,39 @@ class MultiLayerNet:
 		return 1.0-np.mean(1.0*(pr==te))
 
 	def logit(self,z):
-		"""Computes the element-wise logit of z"""
+		'''Computes the element-wise logit of z'''
 		
 		return 1./(1. + np.exp(-1.*z))
 
 	def softmax(self,z):
-		""" Computes the softmax of the outputs in a numerically stable manner"""
+		''' Computes the softmax of the outputs in a numerically stable manner'''
 		
 		maxV = np.max(z,axis=0)
 		logSum = np.log(np.sum(np.exp(z-maxV),axis=0))+maxV
 		return np.exp(z-logSum)
 
 	def compute_class_loss(self,act,y):
-		"""Computes the cross-entropy classification loss of the model (without weight decay)"""
+		'''Computes the cross-entropy classification loss of the model (without weight decay)'''
 		
 		#  E = 1/N*sum(-y*log(p)) - negative log probability of the right answer
 		return np.mean(np.sum(-1.0*y*np.log(act),axis=0))
 
 	def compute_loss(self,act,y,weights=None):
-		"""Computes the cross entropy classification (with weight decay)"""
+		'''Computes the cross entropy classification (with weight decay)'''
 		
 		if weights is None:
 			weights = self._weights
 		return self.compute_class_loss(act,y) + 0.5*self.decay*sum([np.sum(w**2) for w in weights])
 
 	def unroll(self,weights):
-		"""Flattens matrices and concatenates to a vector """
+		'''Flattens matrices and concatenates to a vector '''
 		v = np.array([])
 		for w in weights:
 			v = np.concatenate((v,np.ndarray.flatten(w)))
 		return v
 
 	def reroll(self,v):
-		"""Re-rolls a vector of weights into the in2hid- and hid2out-sized weight matrices"""
+		'''Re-rolls a vector of weights into the in2hid- and hid2out-sized weight matrices'''
 
 		idx = 0
 		r_weights = []
@@ -220,12 +233,11 @@ class MultiLayerNet:
 		return r_weights
 		
 	def clamp(self,a,minv,maxv):
-		""" imposes a range on all values of a matrix """
+		''' imposes a range on all values of a matrix '''
 		return np.fmax(minv,np.fmin(maxv,a))
 
-
 	def compute_gradient(self,w,X,y):
-		""" Computation of the gradient """
+		''' Computation of the gradient '''
 		weights = self.reroll(w)
 		act = self.fprop(X,weights)
 		grad = self.bprop(X,y,act,weights)

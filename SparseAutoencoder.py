@@ -22,7 +22,7 @@ class SparseAutoencoder:
 		print '----------------------------'
 		print 'Number of hidden units: ',self.n_hid
 		print 'Beta coefficient of sparsity: ',self.beta
-		print 'Rho value for desired sparsity level: ',self.rho
+		print 'Rho value for desired average activation: ',self.rho
 		print 'Lambda decay coefficient: ',self.decay
 
 	def logit(self,z):
