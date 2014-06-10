@@ -11,12 +11,21 @@ class SparseAutoencoder:
 		self.beta = beta # sparsity penalty coefficient
 		self.rho = rho # sparsity constraint parameter
 		self.decay = decay # weight decay coefficient for regularization
-		self.main_cost = []
-		self.decay_cost = []
-		self.sparse_cost = []
+		# lists to keep track of loss per iteration
+		self.main_cost = [] # main loss function
+		self.decay_cost = [] # regularization penality
+		self.sparse_cost = [] # sparsity penalty
 
 	def print_init_settings(self):
-		''' Prints initialization settings '''
+		'''Prints initialization settings
+		
+		Parameters:
+		-----------
+		
+		Returns:
+		--------
+		None
+		'''
 
 		print 'Sparse Autoencoder settings:'
 		print '----------------------------'
@@ -26,7 +35,18 @@ class SparseAutoencoder:
 		print 'Lambda decay coefficient: ',self.decay
 
 	def logit(self,z):
-		''' Computes the element-wise logit of z '''		
+		''' Computes the element-wise logit (sigmoid) of z
+
+		Parameters:
+		-----------
+		z:	numpy ndarray, required
+			a x b data matrix, a,b arbitrary
+
+		Returns:
+		--------
+		logit of z (1 + exp(-z))^-1
+
+		'''		
 		return 1./(1. + np.exp(-1.*z))
 
 	def fit(self,X):
@@ -83,11 +103,26 @@ class SparseAutoencoder:
 		return self
 
 	def fprop(self,X,w_i2h=None,w_h2o=None):
-		'''Perform forward propagation'''
+		'''Performs forward propagation through the network
+		
+		Parameters:
+		-----------
+		w_i2h:	weights connecting input to hidden layer (bias included)
+				d+1 x n_hid numpy array
+		w_h2o:	weights connecting hidden layer to output (bias included)
+				n_hid+1 x d
+		
+		Returns:
+		--------
+		act:
+		out:
+		'''
+		    
 
 		if w_i2h==None and w_h2o==None:
 			w_i2h = self.w_i2h
 			w_h2o = self.w_h2o
+
 		m = X.shape[1]
 		# compute activations at the hidden and output layers
 		act = np.vstack((np.ones([1,m]),self.logit(np.dot(w_i2h.T,X)))) # activation of the hidden layer
@@ -96,8 +131,16 @@ class SparseAutoencoder:
 		return act,out
 
 	def bprop(self,X,act,out,w_i2h=None,w_h2o=None):
-		''' Perform back-propagation '''
-
+		'''Performs back-proparation
+		
+		Parameters:
+		-----------
+		
+		Returns:
+		--------
+		
+		'''
+		    
 		if w_i2h == None and w_h2o == None:
 			w_i2h = self.w_i2h
 			w_h2o = self.w_h2o
