@@ -9,7 +9,7 @@ class testSparseAutoencoder(unittest.TestCase):
 		# settings for synthetic training set creation
 		d = 5
 		m = 100
-
+		
 		self.X = np.random.rand(d+1,m) # generate some synthetic data (5-dim feature vectors)
 		self.X[0] = 1 # first row is a bias term, so replace with all 1's
 		self.sa = sae.SparseAutoencoder() # instance of sparse autoencoder

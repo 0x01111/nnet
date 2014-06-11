@@ -17,15 +17,7 @@ class SparseAutoencoder:
 		self.sparse_cost = [] # sparsity penalty
 
 	def print_init_settings(self):
-		'''Prints initialization settings
-		
-		Parameters:
-		-----------
-		
-		Returns:
-		--------
-		None
-		'''
+		'''Prints initialization settings'''
 
 		print 'Sparse Autoencoder settings:'
 		print '----------------------------'
@@ -49,13 +41,82 @@ class SparseAutoencoder:
 		'''		
 		return 1./(1. + np.exp(-1.*z))
 
+	def fprop(self,X,w_i2h=None,w_h2o=None):
+		'''Performs forward propagation through the network
+		
+		Parameters:
+		-----------
+		X:	data matrix
+			d x m numpy array m = # of training instances, d = # of features
+		w_i2h:	weights connecting input to hidden layer (bias included)
+				d+1 x n_hid numpy array
+		w_h2o:	weights connecting hidden layer to output (bias included)
+				n_hid+1 x d
+		
+		Returns:
+		--------
+		act:	activation of hidden layers
+				n_hid+1 x m, numpy array
+		out:	output layer 
+				d x m, numpy array
+		'''
+
+		if w_i2h==None and w_h2o==None:
+			w_i2h = self.w_i2h
+			w_h2o = self.w_h2o
+
+		m = X.shape[1]
+		# compute activations at the hidden and output layers
+		act = np.vstack((np.ones([1,m]),self.logit(np.dot(w_i2h.T,X)))) # activation of the hidden layer
+		out = self.logit(np.dot(w_h2o.T,act)) # final output layer
+		
+		return act,out
+
+	def bprop(self,X,act,out,w_i2h=None,w_h2o=None):
+		'''Performs back-proparation
+		
+		Parameters:
+		-----------
+		X:	data matrix
+			d x m numpy array m = # of training instances, d = # of features
+		
+		w_i2h:	weights connecting input to hidden layer (bias included)
+				d+1 x n_hid numpy array
+		
+		w_h2o:	weights connecting hidden layer to output (bias included)
+				n_hid+1 x d numpy array
+		
+		Returns:
+		--------
+		dE_dw_i2h:	derivative of the loss w.r.t. w_i2h
+					d+1 x n_hid numpy array
+
+		dE_dw_h2o:	derivative of the loss w.r.t. w_h2o
+					n_hid+1 x d numpy array
+		'''				
+		    
+		if w_i2h == None and w_h2o == None:
+			w_i2h = self.w_i2h
+			w_h2o = self.w_h2o
+
+		avg_act = np.mean(act[1:],axis=1)
+
+		m = X.shape[1] # number of training examples
+		dE_dzo = -1.0*(X[1:]-out)*out*(1-out) # assumes a squared loss error function (thi)
+		dE_dw_h2o = 1.0/m*np.dot(act,dE_dzo.T) + self.decay*w_h2o
+		dE_da = np.dot(w_h2o,dE_dzo)[1:] + (self.beta*(-1.0*self.rho/avg_act + (1-self.rho)/(1-avg_act)))[:,np.newaxis]
+		dE_dzh = dE_da*act[1:]*(1-act[1:])
+		dE_dw_i2h = 1.0/m*(np.dot(X,dE_dzh.T))+self.decay*w_i2h
+
+		return dE_dw_i2h,dE_dw_h2o
+
 	def fit(self,X):
 		''' Fits a sparse auto-encoder to the feature vectors
 
 		Parameters:
 		-----------
-		X:	numpy ndarray, required
-			d x M data matrix, M = # of training instances, d = # of features
+		X:	data matrix
+			d x m numpy array m = # of training instances, d = # of features
 
 		Returns:
 		--------
@@ -63,10 +124,10 @@ class SparseAutoencoder:
 
 		Updates:
 		--------
-		w_i2h:	numpy ndarray
-				d+1 x N_h, d = # of input nodes, N_h = # of hidden nodes
-		w_h2o:	numpy ndarray
-				N_h+1 x N_o, N_h = # of hidden nodes, N_o = # of output nodes
+		w_i2h:	weights connecting input to hidden layer (bias included)
+				d+1 x n_hid numpy array
+		w_h2o:	weights connecting hidden layer to output (bias included)
+				n_hid+1 x d
 		'''
 
 		d = X.shape[0] # input (layer) size
@@ -88,74 +149,32 @@ class SparseAutoencoder:
 		res = fmin_l_bfgs_b(self.compute_cost,w0,self.compute_gradient,(X,)) # apply lbfgs to find optimal weight vector
 		w_i2h,w_h2o = self.reroll(res[0]) # re-roll to weight matrices
 
-		print 'Optimization Information:'
-		print '-------------------------'
-		print 'Technique: LBFGS'
-		print 'Convergence: ',res[2]['warnflag']
-		if res[2]==2:
-			print 'Task: ',res[2]['task']
-		print 'Gradient at last iteration: ',res[2]['grad']
-		print 'Number of iterations: ',res[2]['nit']
+		# print 'Optimization Information:'
+		# print '-------------------------'
+		# print 'Technique: LBFGS'
+		# print 'Convergence: ',res[2]['warnflag']
+		# if res[2]==2:
+		# 	print 'Task: ',res[2]['task']
+		# print 'Gradient at last iteration: ',res[2]['grad']
+		# print 'Number of iterations: ',res[2]['nit']
 
 		self.w_i2h = w_i2h
 		self.w_h2o = w_h2o
 
 		return self
 
-	def fprop(self,X,w_i2h=None,w_h2o=None):
-		'''Performs forward propagation through the network
-		
-		Parameters:
-		-----------
-		w_i2h:	weights connecting input to hidden layer (bias included)
-				d+1 x n_hid numpy array
-		w_h2o:	weights connecting hidden layer to output (bias included)
-				n_hid+1 x d
-		
-		Returns:
-		--------
-		act:
-		out:
-		'''
-		    
-
-		if w_i2h==None and w_h2o==None:
-			w_i2h = self.w_i2h
-			w_h2o = self.w_h2o
-
+	def transform(self,X):
+		''' Returns the sparse representation of the feature vectors (i.e. runs forward prop)'''
 		m = X.shape[1]
-		# compute activations at the hidden and output layers
-		act = np.vstack((np.ones([1,m]),self.logit(np.dot(w_i2h.T,X)))) # activation of the hidden layer
-		out = self.logit(np.dot(w_h2o.T,act)) # final output layer
+		X = np.append(np.ones([1,m]),X,axis=0)
+		act,out = self.fprop(X)
+		return act[1:]
+
+	def fit_transform(self,X):
+		''' Convenience function that calls fit, and then transform'''
+		fit(X)
+		return transform(X)
 		
-		return act,out
-
-	def bprop(self,X,act,out,w_i2h=None,w_h2o=None):
-		'''Performs back-proparation
-		
-		Parameters:
-		-----------
-		
-		Returns:
-		--------
-		
-		'''
-		    
-		if w_i2h == None and w_h2o == None:
-			w_i2h = self.w_i2h
-			w_h2o = self.w_h2o
-
-		avg_act = np.mean(act[1:],axis=1)
-
-		m = X.shape[1] # number of training examples
-		dE_dzo = -1.0*(X[1:]-out)*out*(1-out) # assumes a squared loss error function 		
-		dE_dw_h2o = 1.0/m*np.dot(act,dE_dzo.T) + self.decay*w_h2o
-		dE_da = np.dot(w_h2o,dE_dzo)[1:] + (self.beta*(-1.0*self.rho/avg_act + (1-self.rho)/(1-avg_act)))[:,np.newaxis]
-		dE_dzh = dE_da*act[1:]*(1-act[1:])
-		dE_dw_i2h = 1.0/m*(np.dot(X,dE_dzh.T))+self.decay*w_i2h
-
-		return dE_dw_i2h,dE_dw_h2o
-
 	def unroll(self,w_i2h,w_h2o):
 		'''Flattens matrices and concatenates to a vector'''
 		
@@ -203,12 +222,6 @@ class SparseAutoencoder:
 	
 		return (main_cost + decay_cost + sparse_cost)
 
-	def transform(self,X):
-		''' Returns the sparse representation of the feature vectors (i.e. runs forward prop)'''
-		m = X.shape[1]
-		X = np.append(np.ones([1,m]),X,axis=0)
-		act,out = self.fprop(X)
-		return act[1:]
 
 	def plot_costs(self):
 		''' Keeps track of the different cost function values per iteration '''
