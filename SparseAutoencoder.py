@@ -5,7 +5,7 @@ from scipy.optimize import fmin_l_bfgs_b
 class SparseAutoencoder:
 	''' Sparse autoencoder, based on Andrew Ng's notes from CS229 '''
 
-	def __init__(self,n_hid=50,beta=0.1,rho=0.005,decay=0.001):
+	def __init__(self,n_hid=25,beta=3,rho=0.01,decay=0.0001):
 
 		self.n_hid = n_hid # number of nodes in the hidden layer
 		self.beta = beta # sparsity penalty coefficient

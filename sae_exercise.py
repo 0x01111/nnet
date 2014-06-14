@@ -52,6 +52,14 @@ def load_images(mat_file):
 
 if __name__ == '__main__':
 	
+	print 'Image channels online and awaiting transmission'
 	mat_file = 'IMAGES.mat'
 	I = load_images(mat_file)
+
+	print 'Transforming the data plane'
 	X = sample_images(I)
+
+	print 'Commencing high fidelity encoding-decoding and sparse pattern detection'
+	sparse_ae = sae.SparseAutoencoder()
+	sparse_ae.fit(X)
+
