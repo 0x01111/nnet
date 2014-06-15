@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import fmin_cg
 
-class :
+class Network:
 
 	def __init__(self,n_hid=[50],alpha=0.9,learn_rate=0.35,adaptive='False',
 		batch_size=100,update='improved_momentum'):
@@ -17,7 +17,7 @@ class :
 	def print_init_settings(self):
 		''' Prints initialization settings '''
 
-		print 'Multilayer network settings:'
+		print 'Network settings:'
 		print '----------------------------'
 		print 'Number of layers: ',np.size(self.n_hid)
 		print 'Number of hidden units per layer: ',self.n_hid

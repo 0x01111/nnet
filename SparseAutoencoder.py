@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import fmin_l_bfgs_b	
 
-class SparseAutoencoder:
+class Network:
 	''' Sparse autoencoder, based on Andrew Ng's notes from CS229 '''
 
 	def __init__(self,n_hid=25,beta=3,rho=0.01,decay=0.0001):
@@ -27,88 +27,40 @@ class SparseAutoencoder:
 		print 'Lambda decay coefficient: ',self.decay
 
 	def logit(self,z):
-		''' Computes the element-wise logit (sigmoid) of z
-
-		Parameters:
-		-----------
-		z:	numpy ndarray, required
-			a x b data matrix, a,b arbitrary
-
-		Returns:
-		--------
-		logit of z (1 + exp(-z))^-1
-
-		'''		
+		''' Computes the element-wise logit (sigmoid) of z'''		
 		return 1./(1. + np.exp(-1.*z))
 
-	def fprop(self,X,w_i2h=None,w_h2o=None):
-		'''Performs forward propagation through the network
-		
-		Parameters:
-		-----------
-		X:	data matrix
-			d x m numpy array m = # of training instances, d = # of features
-		w_i2h:	weights connecting input to hidden layer (bias included)
-				d+1 x n_hid numpy array
-		w_h2o:	weights connecting hidden layer to output (bias included)
-				n_hid+1 x d
-		
-		Returns:
-		--------
-		act:	activation of hidden layers
-				n_hid+1 x m, numpy array
-		out:	output layer 
-				d x m, numpy array
-		'''
+	def fprop(self,X,w_i2h_=None,w_h2o_=None):
+		'''Performs forward propagation through the network'''
 
-		if w_i2h==None and w_h2o==None:
-			w_i2h = self.w_i2h
-			w_h2o = self.w_h2o
+		if w_i2h_==None and w_h2o_==None:
+			w_i2h_ = self.w_i2h_
+			w_h2o_ = self.w_h2o_
 
 		m = X.shape[1]
 		# compute activations at the hidden and output layers
-		act = np.vstack((np.ones([1,m]),self.logit(np.dot(w_i2h.T,X)))) # activation of the hidden layer
-		out = self.logit(np.dot(w_h2o.T,act)) # final output layer
+		act = np.vstack((np.ones([1,m]),self.logit(np.dot(w_i2h_.T,X)))) # activation of the hidden layer
+		out = self.logit(np.dot(w_h2o_.T,act)) # final output layer
 		
 		return act,out
 
-	def bprop(self,X,act,out,w_i2h=None,w_h2o=None):
-		'''Performs back-proparation
-		
-		Parameters:
-		-----------
-		X:	data matrix
-			d x m numpy array m = # of training instances, d = # of features
-		
-		w_i2h:	weights connecting input to hidden layer (bias included)
-				d+1 x n_hid numpy array
-		
-		w_h2o:	weights connecting hidden layer to output (bias included)
-				n_hid+1 x d numpy array
-		
-		Returns:
-		--------
-		dE_dw_i2h:	derivative of the loss w.r.t. w_i2h
-					d+1 x n_hid numpy array
-
-		dE_dw_h2o:	derivative of the loss w.r.t. w_h2o
-					n_hid+1 x d numpy array
-		'''				
+	def bprop(self,X,act,out,w_i2h_=None,w_h2o_=None):
+		'''Performs back-proparation'''				
 		    
-		if w_i2h == None and w_h2o == None:
-			w_i2h = self.w_i2h
-			w_h2o = self.w_h2o
+		if w_i2h_ == None and w_h2o_ == None:
+			w_i2h_ = self.w_i2h_
+			w_h2o_ = self.w_h2o_
 
 		avg_act = np.mean(act[1:],axis=1)
 
 		m = X.shape[1] # number of training examples
-		dE_dzo = -1.0*(X[1:]-out)*out*(1-out) # assumes a squared loss error function (thi)
-		dE_dw_h2o = 1.0/m*np.dot(act,dE_dzo.T) + self.decay*w_h2o
-		dE_da = np.dot(w_h2o,dE_dzo)[1:] + (self.beta*(-1.0*self.rho/avg_act + (1-self.rho)/(1-avg_act)))[:,np.newaxis]
+		dE_dzo = -1.0*(X[1:]-out)*out*(1-out)
+		dE_dw_h2o_ = 1.0/m*np.dot(act,dE_dzo.T) + self.decay*w_h2o_
+		dE_da = np.dot(w_h2o_,dE_dzo)[1:] + (self.beta*(-1.0*self.rho/avg_act + (1-self.rho)/(1-avg_act)))[:,np.newaxis]
 		dE_dzh = dE_da*act[1:]*(1-act[1:])
-		dE_dw_i2h = 1.0/m*(np.dot(X,dE_dzh.T))+self.decay*w_i2h
+		dE_dw_i2h_ = 1.0/m*(np.dot(X,dE_dzh.T))+self.decay*w_i2h_
 
-		return dE_dw_i2h,dE_dw_h2o
+		return dE_dw_i2h_,dE_dw_h2o_
 
 	def fit(self,X):
 		''' Fits a sparse auto-encoder to the feature vectors
@@ -124,9 +76,9 @@ class SparseAutoencoder:
 
 		Updates:
 		--------
-		w_i2h:	weights connecting input to hidden layer (bias included)
+		w_i2h_:	weights connecting input to hidden layer (bias included)
 				d+1 x n_hid numpy array
-		w_h2o:	weights connecting hidden layer to output (bias included)
+		w_h2o_:	weights connecting hidden layer to output (bias included)
 				n_hid+1 x d
 		'''
 
@@ -141,13 +93,13 @@ class SparseAutoencoder:
 		maxv = np.sqrt(6./(d+self.n_hid+1))
 		minv = -1.0*np.sqrt(6./(d+self.n_hid+1))
 		
-		self.w_i2h = (maxv-minv)*np.random.rand(d+1,self.n_hid) + minv
-		self.w_h2o = (maxv-minv)*np.random.rand(self.n_hid+1,d) + minv
+		self.w_i2h_ = (maxv-minv)*np.random.rand(d+1,self.n_hid) + minv
+		self.w_h2o_ = (maxv-minv)*np.random.rand(self.n_hid+1,d) + minv
 
 		# apply the L-BFGS optimization routine and optimize weights
-		w0 = self.unroll(self.w_i2h,self.w_h2o) # flatten weight matrices to a single vector
+		w0 = self.unroll(self.w_i2h_,self.w_h2o_) # flatten weight matrices to a single vector
 		res = fmin_l_bfgs_b(self.compute_cost,w0,self.compute_gradient,(X,)) # apply lbfgs to find optimal weight vector
-		w_i2h,w_h2o = self.reroll(res[0]) # re-roll to weight matrices
+		w_i2h_,w_h2o_ = self.reroll(res[0]) # re-roll to weight matrices
 
 		# print 'Optimization Information:'
 		# print '-------------------------'
@@ -158,55 +110,84 @@ class SparseAutoencoder:
 		# print 'Gradient at last iteration: ',res[2]['grad']
 		# print 'Number of iterations: ',res[2]['nit']
 
-		self.w_i2h = w_i2h
-		self.w_h2o = w_h2o
+		self.w_i2h_ = w_i2h_
+		self.w_h2o_ = w_h2o_
 
 		return self
 
+	def compute_max_activations(self):
+		'''Computes the input vectors which maximize the feature detectors
+		
+		Parameters:
+		-----------
+		None
+		
+		Returns:
+		--------
+		input vectors (unit-normalized) which maximize the value of 
+		the feature detectors
+		d x self.n_hid, d = # of features, self.n_hid = # of hidden units
+		
+		'''
+		return self.w_i2h_[1:]/np.sqrt(np.sum(self.w_i2h_[1:]**2,axis=0))
+
 	def transform(self,X):
-		''' Returns the sparse representation of the feature vectors (i.e. runs forward prop)'''
+		'''Transforms the input data into a sparse representation
+		
+		Parameters:
+		-----------
+		X:	data matrix
+			d x m matrix m = # of training samples, d = # of features
+		
+		Returns:
+		--------
+		X_[1:]:	transformed features
+				self.n_hid x m m = # of training examples, self.n_hid = # of hidden nodes
+		
+		'''
 		m = X.shape[1]
 		X = np.append(np.ones([1,m]),X,axis=0)
-		act,out = self.fprop(X)
-		return act[1:]
+		X_,out = self.fprop(X)
+		return X_[1:]
 
 	def fit_transform(self,X):
 		''' Convenience function that calls fit, and then transform'''
-		fit(X)
-		return transform(X)
+		self.fit(X)
+		return self.transform(X)
 		
-	def unroll(self,w_i2h,w_h2o):
+	def unroll(self,w_i2h_,w_h2o_):
 		'''Flattens matrices and concatenates to a vector'''
 		
-		return np.hstack((w_i2h.flatten(),w_h2o.flatten()))
+		return np.hstack((w_i2h_.flatten(),w_h2o_.flatten()))
 
 	def reroll(self,v):
 		'''Re-rolls a vector of weights into the i2h- and h2o-sized weight matrices'''
 		idx = 0
-		w_i2h_size = self.w_i2h.size
-		w_h2o_size = self.w_h2o.size
+		w_i2h__size = self.w_i2h_.size
+		w_h2o__size = self.w_h2o_.size
 	
-		w_i2h = np.reshape(v[:w_i2h_size],self.w_i2h.shape)
-		w_h2o = np.reshape(v[w_i2h_size:w_i2h_size+w_h2o_size],self.w_h2o.shape)
+		w_i2h_ = np.reshape(v[:w_i2h__size],self.w_i2h_.shape)
+		w_h2o_ = np.reshape(v[w_i2h__size:w_i2h__size+w_h2o__size],self.w_h2o_.shape)
 		
-		return w_i2h,w_h2o
+		return w_i2h_,w_h2o_
 
 	# The following are convenience functions for performing optimization using routines from 
 	# scipy (e.g, fmin_l_bfgs_b)
+
 	def compute_gradient(self,w,X):
-		''' Computes the gradient '''
+		''' Applies back-prop and collects the derivative into a single vector'''
 		
-		w_i2h,w_h2o = self.reroll(w)
-		act,out = self.fprop(X,w_i2h,w_h2o)
-		dE_dw_i2h, dE_dw_h2o = self.bprop(X,act,out,w_i2h,w_h2o)
+		w_i2h_,w_h2o_ = self.reroll(w)
+		act,out = self.fprop(X,w_i2h_,w_h2o_)
+		dE_dw_i2h_, dE_dw_h2o_ = self.bprop(X,act,out,w_i2h_,w_h2o_)
 		
-		return self.unroll(dE_dw_i2h,dE_dw_h2o)
+		return self.unroll(dE_dw_i2h_,dE_dw_h2o_)
 
 	def compute_cost(self,w,X):
-		''' Computes the loss function '''
+		''' Evaluates the loss function and stores the individual cost values in lists'''
 		
-		w_i2h,w_h2o = self.reroll(w)
-		act,out = self.fprop(X,w_i2h,w_h2o)
+		w_i2h_,w_h2o_ = self.reroll(w)
+		act,out = self.fprop(X,w_i2h_,w_h2o_)
 		avg_act = np.mean(act[1:],axis=1)
 		
 		# compute each of the individual costs
@@ -222,9 +203,8 @@ class SparseAutoencoder:
 	
 		return (main_cost + decay_cost + sparse_cost)
 
-
 	def plot_costs(self):
-		''' Keeps track of the different cost function values per iteration '''
+		''' Plots the evolution of the cost function per iteration '''
 		
 		total_cost = [m+d+s for m,d,s in zip(self.main_cost,self.decay_cost,self.sparse_cost)]
 		r_iter = range(len(total_cost))

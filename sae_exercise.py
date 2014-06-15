@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
+import cv2
 import SparseAutoencoder as sae
 
 def sample_images(I,w=8,h=8,n=10000):
@@ -9,8 +10,7 @@ def sample_images(I,w=8,h=8,n=10000):
 	Parameters:
 	-----------
 	I:	image set
-		r x c x i numpy array where r = rows size, 
-		c = column size, i = number of images
+		r x c x i numpy array, r = rows, c = columns, i = # of images
 	
 	w:	width of patch
 		int
@@ -43,12 +43,24 @@ def load_images(mat_file):
 	-----------
 	mat_file:	MATLAB file from Andrew Ng's sparse AE exercise
 				.mat file
-	Returns:
-	--------
-	I:	image examples
+	Returns
+:	--------
+	I:	image set
+		r x c x i numpy array, r = rows, c = columns, i = # of images
+
 	'''
 	mat = scipy.io.loadmat(mat_file)
 	return mat['IMAGES']
+
+def visualize_image_bases(X_max,n_hid,w=8,h=8):
+	plt.figure()
+	
+	for i in range(n_hid):
+		plt.subplot(5,5,i)
+		curr_img = X_max[:,i].reshape(w,h)
+		plt.imshow(curr_img,'gray')
+
+	plt.show()
 
 if __name__ == '__main__':
 	
@@ -60,6 +72,15 @@ if __name__ == '__main__':
 	X = sample_images(I)
 
 	print 'Commencing high fidelity encoding-decoding and sparse pattern detection'
-	sparse_ae = sae.SparseAutoencoder()
-	sparse_ae.fit(X)
 
+	n_hid = 25
+	sparse_ae = sae.Network(n_hid=n_hid)
+	sparse_ae.fit(X)
+	X_max = sparse_ae.compute_max_activations()
+
+	# print 'Demonstrating feasibility'
+	# np.savez('image_bases',X_max=X_max)
+
+	files = np.load('image_bases.npz')
+	X_max = files['X_max']
+	visualize_image_bases(X_max, n_hid)
