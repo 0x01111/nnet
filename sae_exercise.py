@@ -34,6 +34,9 @@ def sample_images(I,w=8,h=8,n=10000):
 	for i,(r,c) in enumerate(zip(r_idx,c_idx)):
 		X[:,i] = I[r:r+w,c:c+h,np.random.randint(idx)].flatten()
 
+	# do some funky normalization to get every value between 0 and 1
+	
+
 	return X
 
 def load_images(mat_file):
@@ -62,6 +65,16 @@ def visualize_image_bases(X_max,n_hid,w=8,h=8):
 
 	plt.show()
 
+def show_reconstruction(X,X_r,idx,w=8,h=8):
+	plt.figure()
+	xo = X[:,idx].reshape(w,h)
+	xr = X_r[:,idx].reshape(w,h)
+	plt.subplot(211)
+	plt.imshow(xo,'gray')
+	plt.subplot(212)
+	plt.imshow(xr,'gray')
+	plt.show()
+
 if __name__ == '__main__':
 	
 	print 'Image channels online and awaiting transmission'
@@ -76,10 +89,12 @@ if __name__ == '__main__':
 	n_hid = 25
 	sparse_ae = sae.Network(n_hid=n_hid)
 	sparse_ae.fit(X)
+	X_r = sparse_ae.transform(X,'reconstruct')
+	import pdb; pdb.set_trace()
 	X_max = sparse_ae.compute_max_activations()
 
 	# print 'Demonstrating feasibility'
-	# np.savez('image_bases',X_max=X_max)
+	np.savez('image_bases',X_max=X_max)
 
 	files = np.load('image_bases.npz')
 	X_max = files['X_max']

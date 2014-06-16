@@ -90,25 +90,24 @@ class Network:
 		
 		# initialize weights of the auto-encoder randomly for symmetry breaking - chooses
 		# values in the range [-sqrt(6/(d+nhid+1)), sqrt(6/(d+nhid+1))]
-		maxv = np.sqrt(6./(d+self.n_hid+1))
-		minv = -1.0*np.sqrt(6./(d+self.n_hid+1))
+		v = np.sqrt(6./(d+self.n_hid+1))
 		
-		self.w_i2h_ = (maxv-minv)*np.random.rand(d+1,self.n_hid) + minv
-		self.w_h2o_ = (maxv-minv)*np.random.rand(self.n_hid+1,d) + minv
+		self.w_i2h_ = 2.0*v*np.random.rand(d+1,self.n_hid) - v
+		self.w_h2o_ = 2.0*v*np.random.rand(self.n_hid+1,d) - v
 
 		# apply the L-BFGS optimization routine and optimize weights
 		w0 = self.unroll(self.w_i2h_,self.w_h2o_) # flatten weight matrices to a single vector
 		res = fmin_l_bfgs_b(self.compute_cost,w0,self.compute_gradient,(X,)) # apply lbfgs to find optimal weight vector
 		w_i2h_,w_h2o_ = self.reroll(res[0]) # re-roll to weight matrices
 
-		# print 'Optimization Information:'
-		# print '-------------------------'
-		# print 'Technique: LBFGS'
-		# print 'Convergence: ',res[2]['warnflag']
-		# if res[2]==2:
-		# 	print 'Task: ',res[2]['task']
-		# print 'Gradient at last iteration: ',res[2]['grad']
-		# print 'Number of iterations: ',res[2]['nit']
+		print 'Optimization Information:'
+		print '-------------------------'
+		print 'Technique: LBFGS'
+		print 'Convergence: ',res[2]['warnflag']
+		if res[2]==2:
+			print 'Task: ',res[2]['task']
+		print 'Gradient at last iteration: ',res[2]['grad']
+		print 'Number of iterations: ',res[2]['nit']
 
 		self.w_i2h_ = w_i2h_
 		self.w_h2o_ = w_h2o_
@@ -131,13 +130,17 @@ class Network:
 		'''
 		return self.w_i2h_[1:]/np.sqrt(np.sum(self.w_i2h_[1:]**2,axis=0))
 
-	def transform(self,X):
-		'''Transforms the input data into a sparse representation
+	def transform(self,X,option='reduce'):
+		'''Either transforms the input data into a sparse representation, or
+		reconstructs it, based on the option
 		
 		Parameters:
 		-----------
 		X:	data matrix
 			d x m matrix m = # of training samples, d = # of features
+		
+		option:	'reduce' or 'reconstruct'
+				string
 		
 		Returns:
 		--------
@@ -147,11 +150,16 @@ class Network:
 		'''
 		m = X.shape[1]
 		X = np.append(np.ones([1,m]),X,axis=0)
-		X_,out = self.fprop(X)
-		return X_[1:]
-
+		X_,X_r = self.fprop(X)
+		
+		if option == 'reduce':
+			return X_[1:]
+		elif option == 'reconstruct':
+			return X_r
+	    
 	def fit_transform(self,X):
-		''' Convenience function that calls fit, and then transform'''
+		''' Convenience function that calls fit, and then transform (with 'reduce')'''
+		
 		self.fit(X)
 		return self.transform(X)
 		
@@ -163,11 +171,11 @@ class Network:
 	def reroll(self,v):
 		'''Re-rolls a vector of weights into the i2h- and h2o-sized weight matrices'''
 		idx = 0
-		w_i2h__size = self.w_i2h_.size
-		w_h2o__size = self.w_h2o_.size
+		w_i2h_size = self.w_i2h_.size
+		w_h2o_size = self.w_h2o_.size
 	
-		w_i2h_ = np.reshape(v[:w_i2h__size],self.w_i2h_.shape)
-		w_h2o_ = np.reshape(v[w_i2h__size:w_i2h__size+w_h2o__size],self.w_h2o_.shape)
+		w_i2h_ = np.reshape(v[:w_i2h_size],self.w_i2h_.shape)
+		w_h2o_ = np.reshape(v[w_i2h_size:w_i2h_size+w_h2o_size],self.w_h2o_.shape)
 		
 		return w_i2h_,w_h2o_
 
