@@ -34,9 +34,15 @@ def sample_images(I,w=8,h=8,n=10000):
 	for i,(r,c) in enumerate(zip(r_idx,c_idx)):
 		X[:,i] = I[r:r+w,c:c+h,np.random.randint(idx)].flatten()
 
-	# do some funky normalization to get every value between 0 and 1
+	X -= np.mean(X,axis=0) # zero-mean
 	
+	# truncate values to +/- 3 standard deviations and scale to [-1,1]
+	pstd = 3*np.std(X)
+	X = np.maximum(np.minimum(X,pstd),-1.*pstd)/pstd
 
+	# rescale to [0.1,0.9]
+	X = 0.4*(X+1)+0.1
+	# import pdb; pdb.set_trace()
 	return X
 
 def load_images(mat_file):
@@ -61,18 +67,22 @@ def visualize_image_bases(X_max,n_hid,w=8,h=8):
 	for i in range(n_hid):
 		plt.subplot(5,5,i)
 		curr_img = X_max[:,i].reshape(w,h)
-		plt.imshow(curr_img,'gray')
+		plt.imshow(curr_img,cmap='gray',interpolation='none')
 
 	plt.show()
 
 def show_reconstruction(X,X_r,idx,w=8,h=8):
+	''' Plots a single patch before and after reconstruction '''
+
 	plt.figure()
 	xo = X[:,idx].reshape(w,h)
 	xr = X_r[:,idx].reshape(w,h)
 	plt.subplot(211)
-	plt.imshow(xo,'gray')
+	plt.imshow(xo,cmap='gray',interpolation='none')
+	plt.title('Original patch')
 	plt.subplot(212)
-	plt.imshow(xr,'gray')
+	plt.imshow(xr,cmap='gray',interpolation='none')
+	plt.title('Reconstructed patch')
 	plt.show()
 
 if __name__ == '__main__':
@@ -86,14 +96,13 @@ if __name__ == '__main__':
 
 	print 'Commencing high fidelity encoding-decoding and sparse pattern detection'
 
-	n_hid = 25
-	sparse_ae = sae.Network(n_hid=n_hid)
-	sparse_ae.fit(X)
-	X_r = sparse_ae.transform(X,'reconstruct')
-	import pdb; pdb.set_trace()
-	X_max = sparse_ae.compute_max_activations()
-
-	# print 'Demonstrating feasibility'
+	n_hid = 25 # set number of hidden units
+	sparse_ae = sae.Network(n_hid=n_hid) # initialize the network
+	sparse_ae.fit(X) # fit to the data
+	X_r = sparse_ae.transform(X,'reconstruct') # reconstruct the patches 
+	X_max = sparse_ae.compute_max_activations() # compute inputs which maximize the activation of each neuron
+	
+	print 'Demonstrating feasibility'
 	np.savez('image_bases',X_max=X_max)
 
 	files = np.load('image_bases.npz')

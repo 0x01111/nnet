@@ -1,11 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import fmin_l_bfgs_b	
+from scipy.optimize import fmin_l_bfgs_b,fmin_cg	
 
 class Network:
 	''' Sparse autoencoder, based on Andrew Ng's notes from CS229 '''
 
-	def __init__(self,n_hid=25,beta=3,rho=0.01,decay=0.0001):
+	def __init__(self,n_hid=25,beta=3,rho=0.01,decay=0.0001,activation='sigmoid'):
 
 		self.n_hid = n_hid # number of nodes in the hidden layer
 		self.beta = beta # sparsity penalty coefficient
@@ -15,6 +15,7 @@ class Network:
 		self.main_cost = [] # main loss function
 		self.decay_cost = [] # regularization penality
 		self.sparse_cost = [] # sparsity penalty
+		self.activation = 'sigmoid'
 
 	def print_init_settings(self):
 		'''Prints initialization settings'''
@@ -94,6 +95,10 @@ class Network:
 		
 		self.w_i2h_ = 2.0*v*np.random.rand(d+1,self.n_hid) - v
 		self.w_h2o_ = 2.0*v*np.random.rand(self.n_hid+1,d) - v
+
+		# w0 = self.unroll(self.w_i2h_,self.w_h2o_)
+		# wf = fmin_cg(self.compute_cost,w0,self.compute_gradient,(X,))
+		# w_i2h_,w_h2o_ = self.reroll(wf)
 
 		# apply the L-BFGS optimization routine and optimize weights
 		w0 = self.unroll(self.w_i2h_,self.w_h2o_) # flatten weight matrices to a single vector

@@ -27,8 +27,8 @@ class testSparseAutoencoder(unittest.TestCase):
 		bgrad = self.sa.unroll(dE_dw_i2h_,dE_dw_h2o_)
 
 		# Compute the finite difference approximation
-		err_tol = 1e-10	# tolerance
-		eps = 1e-5	# epsilon (for numerical gradient computation)
+		err_tol = 1e-9	# tolerance
+		eps = 1e-4	# epsilon (for numerical gradient computation)
 
 		# Numerical computation of the gradient..but checking every single derivative is 
 		# cumbersome, so just check a few

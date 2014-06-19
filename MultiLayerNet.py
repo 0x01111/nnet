@@ -6,7 +6,7 @@ class MultiLayerNet:
 
 	def __init__(self,n_hid=[50],decay=0.0,alpha=0.9,learn_rate=0.35,adaptive='False',
 		batch_size=100,update='improved_momentum'):
-		
+
 		self.n_hid = n_hid
 		self.decay = decay
 		self.alpha = alpha
@@ -27,6 +27,33 @@ class MultiLayerNet:
 		print 'Adaptive learning rate flag: ',self.adaptive
 		print 'Batch size: ',self.batch_size
 		print 'Network update rule: ',self.update
+
+	def set_weights(self,d,k,method='random'):
+		'''sets the weights of the neural network based on the specified method
+		
+		Parameters:
+		-----------
+		d:	input feature dimension
+			int
+		k:	output dimension
+			int
+
+		method:	'random' or 'sae'
+				string
+		
+		Returns:
+		--------
+		None
+
+		'''
+		if method=='random':
+			n_nodes = [d]+self.n_hid+[k] # concatenate the input and output layers
+			self.wts_ = []
+			for n1,n2 in zip(n_nodes[:-1],n_nodes[1:]):
+				self.wts_.append(0.1*np.random.rand(n1+1,n2))
+
+		elif method=='sae':
+			
 
 	def fit(self,X,y,n_iter=1000):
 		'''
@@ -56,11 +83,6 @@ class MultiLayerNet:
 		X = np.append(np.ones([1,m]),X,axis=0) 
 
 		# initialize weights randomly
-		n_nodes = [d]+self.n_hid+[k] # concatenate the input and output layers
-		self._weights = []
-		for n1,n2 in zip(n_nodes[:-1],n_nodes[1:]):
-			self._weights.append(0.01*np.random.rand(n1+1,n2))
-		
 		accum_grad = []
 		# needed for momentum, improved_momentum
 		if self.update=='momentum' or self.update=='improved_momentum':
@@ -77,17 +99,17 @@ class MultiLayerNet:
 				# gradient values from previous iteration
 				last_grad.append(np.ones([n1+1,n2]))
 		else:
-			gain = len(self._weights)*[1.0]
+			gain = len(self.wts_)*[1.0]
 
 		# uncomment for gradient checking
-		# grad_vector = np.empty(sum([w.size for w in self._weights]))
+		# grad_vector = np.empty(sum([w.size for w in self.wts_]))
 
 		# uses the scipy routine for conjugate gradient
 		if self.update == 'conjugate_gradient':
-			w0 = self.unroll(self._weights)
+			w0 = self.unroll(self.wts_)
 			wf = fmin_cg(self.compute_cost,w0,self.compute_gradient,(X,y))
 			weights = self.reroll(wf)
-			self._weights = weights
+			self.wts_ = weights
 
 		else:
 			for i in range(n_iter):
@@ -96,7 +118,7 @@ class MultiLayerNet:
 				
 				if self.update=='improved_momentum':
 					# take a step first in the direction of the accumulated gradient
-					self._weights = [w+a for w,a in zip(self._weights,accum_grad)]
+					self.wts_ = [w+a for w,a in zip(self.wts_,accum_grad)]
 
 				# propagate the data 
 				act = self.fprop(X[:,idx]) # get the activations from forward propagation
@@ -116,18 +138,18 @@ class MultiLayerNet:
 
 				# simple gradient-descent
 				if self.update=='default':
-					self._weights = [self._weights[i]-self.learn_rate*g*d for i,(d,g) in enumerate(zip(grad,gain))]
+					self.wts_ = [self.wts_[i]-self.learn_rate*g*d for i,(d,g) in enumerate(zip(grad,gain))]
 				
 				# momentum
 				elif self.update=='momentum':
 					for i,(d,g) in enumerate(zip(grad,gain)):
 						accum_grad[i] = self.alpha*accum_grad[i] + d
-						self._weights[i] -= self.learn_rate*g*accum_grad[i]
+						self.wts_[i] -= self.learn_rate*g*accum_grad[i]
 				
 				# improved momentum
 				elif self.update=='improved_momentum':
 					for i,(d,g) in enumerate(zip(grad,gain)):
-						self._weights[i] -= self.learn_rate*g*d
+						self.wts_[i] -= self.learn_rate*g*d
 						accum_grad[i] = self.alpha*(accum_grad[i] - self.learn_rate*g*d)
 			
 		return self
@@ -136,7 +158,7 @@ class MultiLayerNet:
 		'''Perform forward propagation'''
 
 		if weights==None:
-			weights = self._weights
+			weights = self.wts_
 
 		m = X.shape[1] # number of training cases in this batch of data
 		act = [np.append(np.ones([1,m]),self.logit(np.dot(weights[0].T,X)),axis=0)] # use the first data matrix to compute the first activation
@@ -150,7 +172,7 @@ class MultiLayerNet:
 		'''Performs backpropagation'''
 
 		if weights==None:
-			weights = self._weights
+			weights = self.wts_
 
 		# reversing the lists makes it easier to work with 					
 		weights = weights[::-1]
@@ -212,7 +234,7 @@ class MultiLayerNet:
 		'''Computes the cross entropy classification (with weight decay)'''
 		
 		if weights is None:
-			weights = self._weights
+			weights = self.wts_
 		return self.compute_class_loss(act,y) + 0.5*self.decay*sum([np.sum(w**2) for w in weights])
 
 	def unroll(self,weights):
@@ -226,12 +248,12 @@ class MultiLayerNet:
 		'''Re-rolls a vector of weights into the in2hid- and hid2out-sized weight matrices'''
 
 		idx = 0
-		r_weights = []
-		for w in self._weights:
-			r_weights.append(np.reshape(v[idx:idx+w.size],w.shape))
+		r_wts = []
+		for w in self.wts_:
+			r_wts.append(np.reshape(v[idx:idx+w.size],w.shape))
 			idx+=w.size
 		
-		return r_weights
+		return r_wts
 		
 	def clamp(self,a,minv,maxv):
 		''' imposes a range on all values of a matrix '''
