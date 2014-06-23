@@ -4,10 +4,11 @@ from scipy.optimize import fmin_cg
 
 class Network:
 
-	def __init__(self,n_hid=[50],alpha=0.9,learn_rate=0.35,adaptive='False',
+	def __init__(self,n_hid=[50],activ=['sigmoid'],alpha=0.9,learn_rate=0.35,adaptive='False',
 		batch_size=100,update='improved_momentum'):
 		
 		self.n_hid = n_hid
+		self.activ = activ
 		self.alpha = alpha
 		self.learn_rate = learn_rate
 		self.adaptive = adaptive
@@ -85,9 +86,9 @@ class Network:
 		if self.update == 'conjugate_gradient':
 			w0 = self.unroll(self.wts_)
 			wf = fmin_cg(self.compute_cost,w0,self.compute_gradient,(X,y))
-			wts = self.reroll(wf)
-			self.wts_ = wts
-
+			wts_ = self.reroll(wf)
+			self.wts_ = wts_ 
+			
 		else:
 			for i in range(n_iter):
 
@@ -135,7 +136,7 @@ class Network:
 		'''Perform forward propagation'''
 
 		if wts==None:
-			wts = self.wts_
+			wts_ = self.wts_
 
 		m = X.shape[1] # number of training cases in this batch of data
 		act = [np.append(np.ones([1,m]),self.sigmoid(np.dot(wts[0].T,X)),axis=0)] # use the first data matrix to compute the first activation
@@ -149,10 +150,10 @@ class Network:
 		'''Performs backpropagation'''
 
 		if wts==None:
-			wts = self.wts_
+			wts_ = self.wts_
 
 		# reversing the lists makes it easier to work with 					
-		wts = wts[::-1]
+		wts_ = wts[::-1]
 		act = act[::-1]
 
 		N = X.shape[1]
@@ -190,12 +191,12 @@ class Network:
 
 	def compute_gradient(self,w,X,y):
 		''' Computation of the gradient '''
-		wts = self.reroll(w)
+		wts_ = self.reroll(w)
 		act = self.fprop(X,wts)
 		grad = self.bprop(X,y,act,wts)
 		return self.unroll(grad)
 
 	def compute_cost(self,w,X,y):
-		wts = self.reroll(w)
+		wts_ = self.reroll(w)
 		act = self.fprop(X,wts)
 		return self.compute_loss(act[-1],y,wts)

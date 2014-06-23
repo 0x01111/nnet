@@ -107,7 +107,7 @@ class MultiLayerNet:
 		# uses the scipy routine for conjugate gradient
 		if self.update == 'conjugate_gradient':
 			w0 = self.unroll(self.wts_)
-			wf = fmin_cg(self.compute_cost,w0,self.compute_gradient,(X,y))
+			wf = fmin_cg(self.log_loss_err_fcn,w0,self.log_loss_grad_fcn,(X,y))
 			weights = self.reroll(wf)
 			self.wts_ = weights
 
@@ -224,18 +224,21 @@ class MultiLayerNet:
 		logSum = np.log(np.sum(np.exp(z-maxV),axis=0))+maxV
 		return np.exp(z-logSum)
 
-	def compute_class_loss(self,act,y):
+	def compute_class_log_loss(self,act,y):
 		'''Computes the cross-entropy classification loss of the model (without weight decay)'''
 		
 		#  E = 1/N*sum(-y*log(p)) - negative log probability of the right answer
 		return np.mean(np.sum(-1.0*y*np.log(act),axis=0))
 
-	def compute_loss(self,act,y,weights=None):
+	def compute_log_loss(self,act,y,weights=None):
 		'''Computes the cross entropy classification (with weight decay)'''
 		
 		if weights is None:
 			weights = self.wts_
-		return self.compute_class_loss(act,y) + 0.5*self.decay*sum([np.sum(w**2) for w in weights])
+		return self.compute_class_log_loss(act,y) + 0.5*self.decay*sum([np.sum(w**2) for w in weights])
+
+	def compute_s
+
 
 	def unroll(self,weights):
 		'''Flattens matrices and concatenates to a vector '''
@@ -259,14 +262,38 @@ class MultiLayerNet:
 		''' imposes a range on all values of a matrix '''
 		return np.fmax(minv,np.fmin(maxv,a))
 
-	def compute_gradient(self,w,X,y):
+	# convenience functions for batch optimization methods, e.g. fmin_cg, fmin_l_bfgs
+
+	def log_loss_grad_fcn(self,w,X,y):
 		''' Computation of the gradient '''
 		weights = self.reroll(w)
 		act = self.fprop(X,weights)
 		grad = self.bprop(X,y,act,weights)
 		return self.unroll(grad)
 
-	def compute_cost(self,w,X,y):
+	def log_loss_err_fcn(self,w,X,y):
 		weights = self.reroll(w)
 		act = self.fprop(X,weights)
-		return self.compute_loss(act[-1],y,weights)
+		return self.compute_log_loss(act[-1],y,weights)
+
+	def squared_loss_grad_fcn(self,w,X,y):
+		'''One-line description
+		
+		Parameters:
+		-----------
+		
+		Returns:
+		--------
+		
+		'''
+
+	def squared_loss_err_fcn(self,w,X,y):
+		'''One-line description
+		
+		Parameters:
+		-----------
+		
+		Returns:
+		--------
+		
+		'''
