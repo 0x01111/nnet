@@ -1,28 +1,7 @@
-import theano
+import numpy as np
 
-def compute_class_loss(self,y_pred,y_true):
-	'''Computes the cross-entropy classification loss of the model (without weight decay)'''
-	
-	#  E = 1/N*sum(-y*log(p)) - negative log probability of the right answer
-	return np.mean(np.sum(-1.0*y_true*np.log(y_pred),axis=0))
-
-def compute_loss(self,y_pred,y_true,wts):
-	'''Standard log-loss
-	
-	Parameters:
-	-----------
-	
-	Returns:
-	--------
-	'''
-	base_loss = self.compute_class_loss(y_pred, y_true)
-	if self.norm=='l2':
-		return base_loss + 0.5*self.decay*sum([np.sum(w**2) for w in wts])
-	elif self.norm=='l1':
-		return base_loss + self.decay*sum([np.sum(abs(w)) for w in wts])
-
-def log_loss(y_pred,y_true,wts,decay=0.001):
-	''' Cross-entropy with L2 regularization
+def log_loss(y_pred,y_true):
+	''' Cross-entropy loss function
 
 	Parameters:
 	-----------
@@ -31,12 +10,49 @@ def log_loss(y_pred,y_true,wts,decay=0.001):
 	
 	y_true:	true values
 			k x M numpy ndarray
+
+	Returns:
+	--------
+	loss:	cross entropy loss
+			float
+	'''
+	return np.mean(np.sum(-1.0*y_true*np.log(y_pred),axis=0))
+
+def decay_loss(wts,decay=0.001):
+	''' L2 Regularization term
+
+	Parameters:
+	-----------
+	wts:	weight vector
+			1 x sum(size(w) for w in [W]) where W is a list of weight matrices
+
+	decay:	coefficient of regularization
+			float
+	'''	
+	return 0.5*decay*np.sum(wts**2)
+
+
+def squared_loss(y_pred,y_true):
+	''' Standard squared loss
+	
+	Parameters:
+	-----------
+	y_pred:	predicted value(s)
+			k x M numpy ndarray, where k = # of classes, M = # of instances
+	
+	y_true:	true values
+			k x M numpy ndarray
+
+	wts:	weight vector
+			1 x sum(size(w) for w in [W]) where W is a list of weight matrices
 	
 	Returns:
 	--------
-	loss:	cross entropy with L2 regularization
+	loss:	squared loss
 			float
-
 	'''
-	base_loss = np.mean(np.sum(-1.0*y_true*np.log(y_pred),axis=0))
-	return base_loss + 0.5*decay*sum([np.sum(w**2) for w in wts])
+	return np.mean(np.sum((y_pred-y_true)**2,axis=0))
+
+def log_loss_reg(y_pred,y_true,wts,decay=0.001):
+	''' Convenience function combining log loss with regularization
+	

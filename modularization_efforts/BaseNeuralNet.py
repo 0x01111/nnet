@@ -1,11 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import fmin_cg
+from scipy.optimize import fmin_cg,fmin_l_bfgs
+import LossFunctions as lf
 
 class Network:
 
 	def __init__(self,n_hid=[50],activ=['sigmoid'],alpha=0.9,learn_rate=0.35,adaptive='False',
-		batch_size=100,update='improved_momentum'):
+		batch_size=100,update='improved_momentum',loss_func=lf.log_loss):
 		
 		self.n_hid = n_hid
 		self.activ = activ
