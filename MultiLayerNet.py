@@ -1,19 +1,26 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import fmin_cg
+import utils
+from scipy.optimize import fmin_cg,fmin_l_bfgs_b
 
 class MultiLayerNet:
 
-	def __init__(self,n_hid=[50],decay=0.0,alpha=0.9,learn_rate=0.35,adaptive='False',
-		batch_size=100,update='improved_momentum'):
+	def __init__(self,n_hid=[50],decay=0.0001,alpha=0.9,learn_rate=0.35,rho=0.01,
+		beta=1,adaptive='False',batch_size=100,update='improved_momentum',mode='multilayer'):
 
+		# neural net hyperparameters
 		self.n_hid = n_hid
-		self.decay = decay
-		self.alpha = alpha
-		self.learn_rate = learn_rate
-		self.adaptive = adaptive
 		self.batch_size = batch_size
+		self.adaptive = adaptive
+		self.learn_rate = learn_rate
 		self.update = update
+		self.alpha = alpha
+		self.mode = mode
+		
+		# loss-function hyperparameters
+		self.beta = beta
+		self.rho = rho
+		self.decay = decay
 
 	def print_init_settings(self):
 		''' Prints initialization settings '''
@@ -28,32 +35,35 @@ class MultiLayerNet:
 		print 'Batch size: ',self.batch_size
 		print 'Network update rule: ',self.update
 
-	def set_weights(self,d,k,method='random'):
-		'''sets the weights of the neural network based on the specified method
+	# def set_weights(self,d,k,method='random'):
+	# 	'''sets the weights of the neural network based on the specified method
 		
-		Parameters:
-		-----------
-		d:	input feature dimension
-			int
-		k:	output dimension
-			int
+	# 	Parameters:
+	# 	-----------
+	# 	d:	input feature dimension
+	# 		int
+	# 	k:	output dimension
+	# 		int
 
-		method:	'random' or 'sae'
-				string
+	# 	method:	'random' or 'sae'
+	# 			string
 		
-		Returns:
-		--------
-		None
+	# 	Returns:
+	# 	--------
+	# 	None
 
-		'''
-		if method=='random':
-			n_nodes = [d]+self.n_hid+[k] # concatenate the input and output layers
-			self.wts_ = []
-			for n1,n2 in zip(n_nodes[:-1],n_nodes[1:]):
-				self.wts_.append(0.1*np.random.rand(n1+1,n2))
+	# 	'''
+	# 	if method=='random':
+	# 		n_nodes = [d]+self.n_hid+[k] # concatenate the input and output layers
+	# 		self.weights = []
+	# 		for n1,n2 in zip(n_nodes[:-1],n_nodes[1:]):
+	# 			self.weights.append(0.1*np.random.rand(n1+1,n2))
 
-		elif method=='sae':
-			
+	# 	# chooses values in the range [-sqrt(6/(d+nhid+1)), sqrt(6/(d+nhid+1))]
+	# 	v = np.sqrt(6./(d+self.n_hid+1))
+		
+	# 	self.w_i2h_ = 2.0*v*np.random.rand(d+1,self.n_hid) - v
+	# 	self.w_h2o_ = 2.0*v*np.random.rand(self.n_hid+1,d) - v
 
 	def fit(self,X,y,n_iter=1000):
 		'''
@@ -99,17 +109,34 @@ class MultiLayerNet:
 				# gradient values from previous iteration
 				last_grad.append(np.ones([n1+1,n2]))
 		else:
-			gain = len(self.wts_)*[1.0]
+			gain = len(self.weights)*[1.0]
 
 		# uncomment for gradient checking
-		# grad_vector = np.empty(sum([w.size for w in self.wts_]))
+		# grad_vector = np.empty(sum([w.size for w in self.weights]))
+
+		# set which fprop/bprop/loss function methods we want to use
+		if self.mode=='multilayer':
+			self.fprop_fn = self.fprop_mln
+			self.bprop_fn = self.bprop_mln
+			self.compute_loss = self.compute_mln_log_loss
+		elif self.mode=='sparse_autoencoder':
+			self.fprop_fn = self.fprop_sae
+			self.bprop_fn = self.bprop_sae
+			self.compute_loss = self.compute_sae_squared_loss
 
 		# uses the scipy routine for conjugate gradient
 		if self.update == 'conjugate_gradient':
-			w0 = self.unroll(self.wts_)
-			wf = fmin_cg(self.log_loss_err_fcn,w0,self.log_loss_grad_fcn,(X,y))
+			w0 = self.unroll(self.weights)
+			wf = fmin_cg(self.loss_fcn,w0,self.loss_grad,(X,y))
 			weights = self.reroll(wf)
-			self.wts_ = weights
+			self.weights = weights
+			
+		elif self.update == 'L-BFGS':
+			# apply the L-BFGS optimization routine and optimize weights
+			w0 = self.unroll(self.weights) # flatten weight matrices to a single vector
+			res = fmin_l_bfgs_b(self.loss_fcn,w0,self.loss_grad,(X,y)) # apply lbfgs to find optimal weight vector
+			weights = self.reroll(res[0]) # re-roll to weight matrices
+			self.weights = weights
 
 		else:
 			for i in range(n_iter):
@@ -118,7 +145,7 @@ class MultiLayerNet:
 				
 				if self.update=='improved_momentum':
 					# take a step first in the direction of the accumulated gradient
-					self.wts_ = [w+a for w,a in zip(self.wts_,accum_grad)]
+					self.weights = [w+a for w,a in zip(self.weights,accum_grad)]
 
 				# propagate the data 
 				act = self.fprop(X[:,idx]) # get the activations from forward propagation
@@ -138,63 +165,96 @@ class MultiLayerNet:
 
 				# simple gradient-descent
 				if self.update=='default':
-					self.wts_ = [self.wts_[i]-self.learn_rate*g*d for i,(d,g) in enumerate(zip(grad,gain))]
+					self.weights = [self.weights[i]-self.learn_rate*g*d for i,(d,g) in enumerate(zip(grad,gain))]
 				
 				# momentum
 				elif self.update=='momentum':
 					for i,(d,g) in enumerate(zip(grad,gain)):
 						accum_grad[i] = self.alpha*accum_grad[i] + d
-						self.wts_[i] -= self.learn_rate*g*accum_grad[i]
+						self.weights[i] -= self.learn_rate*g*accum_grad[i]
 				
 				# improved momentum
 				elif self.update=='improved_momentum':
 					for i,(d,g) in enumerate(zip(grad,gain)):
-						self.wts_[i] -= self.learn_rate*g*d
+						self.weights[i] -= self.learn_rate*g*d
 						accum_grad[i] = self.alpha*(accum_grad[i] - self.learn_rate*g*d)
 			
 		return self
 
-	def fprop(self,X,weights=None):
-		'''Perform forward propagation'''
+	def fprop_sae(self,X,weights=None):
+		'''Performs forward propagation for a sparse autoencoder with sigmoid activations'''
 
 		if weights==None:
-			weights = self.wts_
+			weights = self.weights
 
 		m = X.shape[1] # number of training cases in this batch of data
-		act = [np.append(np.ones([1,m]),self.logit(np.dot(weights[0].T,X)),axis=0)] # use the first data matrix to compute the first activation
+		act = [np.vstack((np.ones([1,m]),utils.sigmoid(np.dot(weights[0].T,X))))] # use the first data matrix to compute the first activation
 		for i,w in enumerate(weights[1:-1]):
-			act.append(np.append(np.ones([1,m]),self.logit(np.dot(w.T,act[i])),axis=0)) # sigmoid activations
-		act.append(self.softmax(np.dot(weights[-1].T,act[-1]))) # output of the last layer is a softmax
+			act.append(np.vstack((np.ones([1,m]),utils.sigmoid(np.dot(w.T,act[i]))))) # sigmoid activations
+		act.append(utils.sigmoid(np.dot(weights[-1].T,act[-1])))
+
+		return act
+
+	def bprop_sae(self,X,act,weights):
+		'''Performs back-proparation - this only assumes a single layer'''				
+		    
+		if weights==None:
+			weights = self.weights
+
+		avg_act = np.mean(act[0][1:],axis=1)
+
+		m = X.shape[1]
+		
+		dE_dW = []
+		dE_dz = -1.0*(X[1:]-act[1])*act[1]*(1-act[1])
+		dE_dW.append(1.0/m*np.dot(act,dE_dz.T) + self.decay*weights[1])
+		dE_da = np.dot(weights[1],dE_dz)[1:] + (self.beta*(-1.0*self.rho/avg_act + (1-self.rho)/(1-avg_act)))[:,np.newaxis]
+		dE_dz = dE_da*act[0][1:]*(1-act[0][1:]) # no connection to the bias node
+		dE_dW.append(1.0/m*(np.dot(X,dE_dz.T))+self.decay*weights[0])
+
+		return dE_dW[::-1]
+
+	def fprop_mln(self,X,weights=None):
+		'''Perform forward propagation for a general neural net with sigmoid activations and softmax output '''
+
+		if weights==None:
+			weights = self.weights
+
+		m = X.shape[1] # number of training cases in this batch of data
+		act = [np.vstack((np.ones([1,m]),utils.sigmoid(np.dot(weights[0].T,X))))] # use the first data matrix to compute the first activation
+		for i,w in enumerate(weights[1:-1]):
+			act.append(np.vstack((np.ones([1,m]),utils.sigmoid(np.dot(w.T,act[i]))))) # sigmoid activations
+		act.append(utils.softmax(np.dot(weights[-1].T,act[-1]))) # output of the last layer is a softmax
 		
 		return act
 
-	def bprop(self,X,y,act,weights=None):
+	def bprop_mln(self,X,y,act,weights=None):
 		'''Performs backpropagation'''
 
 		if weights==None:
-			weights = self.wts_
+			weights = self.weights
 
 		# reversing the lists makes it easier to work with 					
 		weights = weights[::-1]
 		act = act[::-1]
 
-		N = X.shape[1]
-		grad = []
+		m = X.shape[1]
+		dE_dW = []
 		
 		# the final layer is a softmax, so calculate the derivative with respect to 
 		# the inputs to the softmax first
-		grad_z = act[0]-y
+		dE_dz = act[0]-y
 		
 		for i,a in enumerate(act[1:]):
-			grad.append(1.0/N*np.dot(a,grad_z.T) + self.decay*weights[i])
-			grad_y = np.dot(weights[i],grad_z)
-			grad_z = (grad_y*a*(1-a))[1:,:] # no connection to the bias node
+			dE_dW.append(1.0/m*np.dot(a,dE_dz.T) + self.decay*weights[i])
+			dE_da = np.dot(weights[i],dE_dz)
+			dE_dz = (dE_da*a*(1-a))[1:] # no connection to the bias node
 		
-		grad.append(1.0/N*np.dot(X,grad_z.T) + self.decay*weights[-1])
+		dE_dW.append(1.0/m*np.dot(X,dE_dz.T) + self.decay*weights[-1])
 
 		# re-reverse and return
-		return grad[::-1]
-		
+		return dE_dW[::-1]
+
 	def predict(self,X,y=None):
 		'''Uses fprop for predicting labels of data. If labels are also provided, also returns mce '''
 
@@ -208,92 +268,47 @@ class MultiLayerNet:
 		
 		return pred,mce
 
-	def compute_mce(self,pr,te):
-		" Computes the misclassification error"
-		return 1.0-np.mean(1.0*(pr==te))
-
-	def logit(self,z):
-		'''Computes the element-wise logit of z'''
-		
-		return 1./(1. + np.exp(-1.*z))
-
-	def softmax(self,z):
-		''' Computes the softmax of the outputs in a numerically stable manner'''
-		
-		maxV = np.max(z,axis=0)
-		logSum = np.log(np.sum(np.exp(z-maxV),axis=0))+maxV
-		return np.exp(z-logSum)
-
-	def compute_class_log_loss(self,act,y):
+	def compute_mln_class_log_loss(self,act,y):
 		'''Computes the cross-entropy classification loss of the model (without weight decay)'''
 		
 		#  E = 1/N*sum(-y*log(p)) - negative log probability of the right answer
 		return np.mean(np.sum(-1.0*y*np.log(act),axis=0))
 
-	def compute_log_loss(self,act,y,weights=None):
+	def compute_mln_log_loss(self,act,y,weights=None):
 		'''Computes the cross entropy classification (with weight decay)'''
 		
 		if weights is None:
-			weights = self.wts_
-		return self.compute_class_log_loss(act,y) + 0.5*self.decay*sum([np.sum(w**2) for w in weights])
+			weights = self.weights
+		return self.compute_class_log_loss(act[-1],y) + 0.5*self.decay*sum([np.sum(w**2) for w in weights])
 
-	def compute_s
-
-
-	def unroll(self,weights):
-		'''Flattens matrices and concatenates to a vector '''
-		v = np.array([])
-		for w in weights:
-			v = np.concatenate((v,np.ndarray.flatten(w)))
-		return v
-
-	def reroll(self,v):
-		'''Re-rolls a vector of weights into the in2hid- and hid2out-sized weight matrices'''
-
-		idx = 0
-		r_wts = []
-		for w in self.wts_:
-			r_wts.append(np.reshape(v[idx:idx+w.size],w.shape))
-			idx+=w.size
+	def compute_sae_squared_loss(self,act,y,weights=None):
+		'''Computes the squared-loss for sparse autoencoders'''	
+		avg_act = np.mean(act[0][1:],axis=1)
 		
-		return r_wts
-		
+		# compute each of the individual costs
+		main_cost = 0.5*np.mean(np.sum((y-act[1])**2,axis=0))
+		decay_cost = 0.5*self.decay*sum([np.sum(w**2) for w in weights])
+		sparse_cost = self.beta*np.sum(self.rho*np.log(self.rho/avg_act)+
+			(1-self.rho)*np.log((1-self.rho)/(1-avg_act)))
+	
+		return (main_cost + decay_cost + sparse_cost)
+	
 	def clamp(self,a,minv,maxv):
 		''' imposes a range on all values of a matrix '''
 		return np.fmax(minv,np.fmin(maxv,a))
 
-	# convenience functions for batch optimization methods, e.g. fmin_cg, fmin_l_bfgs
+	# convenience functions for batch optimization methods, e.g. fmin_cg, fmin_l_bfgs_b
 
-	def log_loss_grad_fcn(self,w,X,y):
-		''' Computation of the gradient '''
+	def loss_grad(self,w,X,y):
 		weights = self.reroll(w)
-		act = self.fprop(X,weights)
-		grad = self.bprop(X,y,act,weights)
+		act = self.fprop_fn(X,weights)
+		grad = self.bprop_fn(X,y,act,weights)
 		return self.unroll(grad)
 
-	def log_loss_err_fcn(self,w,X,y):
+	def loss_fcn(self,w,X,y):
 		weights = self.reroll(w)
-		act = self.fprop(X,weights)
-		return self.compute_log_loss(act[-1],y,weights)
+		act = self.fprop_fn(X,weights)
+		return self.compute_loss(act,y,weights)
 
-	def squared_loss_grad_fcn(self,w,X,y):
-		'''One-line description
-		
-		Parameters:
-		-----------
-		
-		Returns:
-		--------
-		
-		'''
 
-	def squared_loss_err_fcn(self,w,X,y):
-		'''One-line description
-		
-		Parameters:
-		-----------
-		
-		Returns:
-		--------
-		
-		'''
+

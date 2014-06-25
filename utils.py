@@ -1,6 +1,6 @@
 import numpy as np
 
-def softmax(self,z):
+def softmax(z):
 	''' Computes the softmax of the outputs in a numerically stable manner'''
 		
 	max_v = np.max(z,axis=0)
@@ -8,23 +8,18 @@ def softmax(self,z):
 	return np.exp(z-log_sum)
 
 
-def compute_mce(self,pr,te):
-	" Computes the misclassification error"
-	return 1.0-np.mean(1.0*(pr==te))
-
-def sigmoid(self,z):
+def sigmoid(z):
 	'''Computes the element-wise logit of z'''
-	
 	return 1./(1. + np.exp(-1.*z))
 
-def unroll(self,wts):
+def unroll(wts):
 	'''Flattens matrices and concatenates to a vector '''
 	v = np.array([])
 	for w in wts:
-		v = np.concatenate((v,w.flatten())
+		v = np.concatenate((v,w.flatten()))
 	return v
 
-def reroll(self,v):
+def reroll(v):
 	'''Re-rolls a vector of wts into the in2hid- and hid2out-sized weight matrices'''
 
 	idx = 0
@@ -34,3 +29,7 @@ def reroll(self,v):
 		idx+=w.size
 	
 	return r_wts
+
+def compute_mce(pr,te):
+	" Computes the misclassification error"
+	return 1.0-np.mean(1.0*(pr==te))

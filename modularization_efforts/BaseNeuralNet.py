@@ -1,15 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import fmin_cg,fmin_l_bfgs
+from scipy.optimize import fmin_cg
 import LossFunctions as lf
 
 class Network:
 
 	def __init__(self,n_hid=[50],activ=['sigmoid'],alpha=0.9,learn_rate=0.35,adaptive='False',
-		batch_size=100,update='improved_momentum',loss_func=lf.log_loss):
+		batch_size=100,update='improved_momentum',loss_func=lf.log_loss_reg):
 		
 		self.n_hid = n_hid
-		self.activ = activ
+		# decide the functions 
+		activ_map = {'sigmoid':lf.sigmoid, 'softmax':lf.softmax}
+		self.activ = []
+		for a in activ:
+			self.activ.append(activ_map[a])
 		self.alpha = alpha
 		self.learn_rate = learn_rate
 		self.adaptive = adaptive
@@ -56,11 +60,10 @@ class Network:
 		# append ones to account for bias
 		X = np.append(np.ones([1,m]),X,axis=0) 
 
-		# initialize weights randomly
-		n_nodes = [d]+self.n_hid+[k] # concatenate the input and output layers
-		self.wts_ = []
-		for n1,n2 in zip(n_nodes[:-1],n_nodes[1:]):
-			self.wts_.append(0.01*np.random.rand(n1+1,n2))
+		self.n_hid = np.array([d]+self.n_hid+[k]) # augment with the input and output layers
+		# (d+1)*n_hid[0] + (n_hid[0]+1)*n_hid[1] + (n_hid[1]+1)*n_hid[2]+... = 
+		num_param = np.sum(self.n_hid[:-1]*self.n_hid[1:]) + np.sum(self.n_hid[1:])
+		self.wts = np.empty(num_param)
 		
 		accum_grad = []
 		# needed for momentum, improved_momentum
@@ -79,9 +82,6 @@ class Network:
 				last_grad.append(np.ones([n1+1,n2]))
 		else:
 			gain = len(self.wts_)*[1.0]
-
-		# uncomment for gradient checking
-		# grad_vector = np.empty(sum([w.size for w in self.wts_]))
 
 		# uses the scipy routine for conjugate gradient
 		if self.update == 'conjugate_gradient':
@@ -133,7 +133,24 @@ class Network:
 			
 		return self
 
-	def fprop(self,X,wts=None):
+	def fprop(self,X,wts):
+		''' Perform forward propagation'''
+		m = X.shape[1]
+		
+		curr_idx = 0
+		n_param = (self.n_hid[0]+1)*self.n_hid[1]
+		act = self.activ[0](np.dot(wts[curr_idx:n_param].reshape((self.n_hid[0]+1,self.n_hid[1])).T,X))
+		act = np.append(np.ones([1,m]),act,axis=0) # use the data matrix to compute the first activation
+		curr_idx += n_param
+
+		for n1,n2 in zip(self.n_hid[1:-1],self.n_hid[2:]):
+			n_param = (n1+1)*n2
+			curr_act = self.sigmoid(np.dot(wts[curr_idx:n_param].reshape((n1+1,n2)).T,act[-1]))
+			act.append(np.ones([1,m]),curr_act,axis=0)
+			curr_idx += n_param
+
+
+	def fprop_old(self,X,wts=None):
 		'''Perform forward propagation'''
 
 		if wts==None:
@@ -147,7 +164,7 @@ class Network:
 		
 		return act
 
-	def bprop(self,X,y,act,wts=None):
+	def bprop_old(self,X,y,act,wts=None):
 		'''Performs backpropagation'''
 
 		if wts==None:

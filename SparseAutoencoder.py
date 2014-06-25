@@ -5,7 +5,7 @@ from scipy.optimize import fmin_l_bfgs_b,fmin_cg
 class Network:
 	''' Sparse autoencoder, based on Andrew Ng's notes from CS229 '''
 
-	def __init__(self,n_hid=25,beta=3,rho=0.01,decay=0.0001,activation='sigmoid'):
+	def __init__(self,n_hid=25,beta=3,rho=0.01,decay=0.0001):
 
 		self.n_hid = n_hid # number of nodes in the hidden layer
 		self.beta = beta # sparsity penalty coefficient
@@ -15,7 +15,6 @@ class Network:
 		self.main_cost = [] # main loss function
 		self.decay_cost = [] # regularization penality
 		self.sparse_cost = [] # sparsity penalty
-		self.activation = 'sigmoid'
 
 	def print_init_settings(self):
 		'''Prints initialization settings'''
