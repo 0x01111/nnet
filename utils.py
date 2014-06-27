@@ -19,14 +19,15 @@ def unroll(wts):
 		v = np.concatenate((v,w.flatten()))
 	return v
 
-def reroll(v):
-	'''Re-rolls a vector of wts into the in2hid- and hid2out-sized weight matrices'''
+def reroll(v,n_nodes):
+	'''Re-rolls a vector v into the weight matrices'''
 
 	idx = 0
 	r_wts = []
-	for w in self.wts_:
-		r_wts.append(np.reshape(v[idx:idx+w.size],w.shape))
-		idx+=w.size
+	for r,c in zip(n_nodes[:-1],n_nodes[1:]):
+		w_size = (r+1)*c
+		r_wts.append(np.reshape(v[idx:idx+w_size],(r+1,c)))
+		idx += w_size
 	
 	return r_wts
 

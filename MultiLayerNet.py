@@ -54,9 +54,9 @@ class MultiLayerNet:
 
 	# 	'''
 	# 	if method=='random':
-	# 		n_nodes = [d]+self.n_hid+[k] # concatenate the input and output layers
+	# 		self.n_nodes = [d]+self.n_hid+[k] # concatenate the input and output layers
 	# 		self.weights = []
-	# 		for n1,n2 in zip(n_nodes[:-1],n_nodes[1:]):
+	# 		for n1,n2 in zip(self.n_nodes[:-1],n_nodes[1:]):
 	# 			self.weights.append(0.1*np.random.rand(n1+1,n2))
 
 	# 	# chooses values in the range [-sqrt(6/(d+nhid+1)), sqrt(6/(d+nhid+1))]
@@ -119,6 +119,7 @@ class MultiLayerNet:
 			self.fprop_fn = self.fprop_mln
 			self.bprop_fn = self.bprop_mln
 			self.compute_loss = self.compute_mln_log_loss
+
 		elif self.mode=='sparse_autoencoder':
 			self.fprop_fn = self.fprop_sae
 			self.bprop_fn = self.bprop_sae
@@ -248,7 +249,34 @@ class MultiLayerNet:
 		for i,a in enumerate(act[1:]):
 			dE_dW.append(1.0/m*np.dot(a,dE_dz.T) + self.decay*weights[i])
 			dE_da = np.dot(weights[i],dE_dz)
-			dE_dz = (dE_da*a*(1-a))[1:] # no connection to the bias node
+			dE_dz = (dE_da*a*(1-a))[1:,:] # no connection to the bias node
+		
+		dE_dW.append(1.0/m*np.dot(X,dE_dz.T) + self.decay*weights[-1])
+
+		# re-reverse and return
+		return dE_dW[::-1]
+
+	def bprop_mln_old(self,X,y,act,weights=None):
+		'''Performs backpropagation'''
+
+		if weights==None:
+			weights = self.weights
+
+		# reversing the lists makes it easier to work with 					
+		weights = weights[::-1]
+		act = act[::-1]
+
+		m = X.shape[1]
+		dE_dW = []
+		
+		# the final layer is a softmax, so calculate the derivative with respect to 
+		# the inputs to the softmax first
+		dE_dz = act[0]-y
+		
+		for i,a in enumerate(act[1:]):
+			dE_dW.append(1.0/m*np.dot(a,dE_dz.T) + self.decay*weights[i])
+			dE_dy = np.dot(weights[i],dE_dz)
+			dE_dz = (dE_dy*a*(1-a))[1:,:] # no connection to the bias node
 		
 		dE_dW.append(1.0/m*np.dot(X,dE_dz.T) + self.decay*weights[-1])
 
@@ -279,7 +307,7 @@ class MultiLayerNet:
 		
 		if weights is None:
 			weights = self.weights
-		return self.compute_class_log_loss(act[-1],y) + 0.5*self.decay*sum([np.sum(w**2) for w in weights])
+		return self.compute_mln_class_log_loss(act,y) + 0.5*self.decay*sum([np.sum(w**2) for w in weights])
 
 	def compute_sae_squared_loss(self,act,y,weights=None):
 		'''Computes the squared-loss for sparse autoencoders'''	
