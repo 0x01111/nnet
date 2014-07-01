@@ -35,35 +35,35 @@ class MultiLayerNet:
 		print 'Batch size: ',self.batch_size
 		print 'Network update rule: ',self.update
 
-	# def set_weights(self,d,k,method='random'):
-	# 	'''sets the weights of the neural network based on the specified method
+	def set_weights(self,d,k,method='random'):
+		'''sets the weights of the neural network based on the specified method
 		
-	# 	Parameters:
-	# 	-----------
-	# 	d:	input feature dimension
-	# 		int
-	# 	k:	output dimension
-	# 		int
+		Parameters:
+		-----------
+		d:	input feature dimension
+			int
+		k:	output dimension
+			int
 
-	# 	method:	'random' or 'sae'
-	# 			string
+		method:	'random' or 'sae'
+				string
 		
-	# 	Returns:
-	# 	--------
-	# 	None
+		Returns:
+		--------
+		None
 
-	# 	'''
-	# 	if method=='random':
-	# 		self.n_nodes = [d]+self.n_hid+[k] # concatenate the input and output layers
-	# 		self.weights = []
-	# 		for n1,n2 in zip(self.n_nodes[:-1],n_nodes[1:]):
-	# 			self.weights.append(0.1*np.random.rand(n1+1,n2))
+		'''
+		if method=='random':
+			self.n_nodes = [d]+self.n_hid+[k] # concatenate the input and output layers
+			self.weights = []
+			for n1,n2 in zip(self.n_nodes[:-1],self.n_nodes[1:]):
+				self.weights.append(0.1*np.random.rand(n1+1,n2))
 
-	# 	# chooses values in the range [-sqrt(6/(d+nhid+1)), sqrt(6/(d+nhid+1))]
-	# 	v = np.sqrt(6./(d+self.n_hid+1))
+		# chooses values in the range [-sqrt(6/(d+nhid+1)), sqrt(6/(d+nhid+1))]
+		# v = np.sqrt(6./(d+self.n_hid+1))
 		
-	# 	self.w_i2h_ = 2.0*v*np.random.rand(d+1,self.n_hid) - v
-	# 	self.w_h2o_ = 2.0*v*np.random.rand(self.n_hid+1,d) - v
+		# self.w_i2h_ = 2.0*v*np.random.rand(d+1,self.n_hid) - v
+		# self.w_h2o_ = 2.0*v*np.random.rand(self.n_hid+1,d) - v
 
 	def fit(self,X,y,n_iter=1000):
 		'''
@@ -96,15 +96,17 @@ class MultiLayerNet:
 		accum_grad = []
 		# needed for momentum, improved_momentum
 		if self.update=='momentum' or self.update=='improved_momentum':
-			for n1,n2 in zip(n_nodes[:-1],n_nodes[1:]):
+			for n1,n2 in zip(self.n_nodes[:-1],self.n_nodes[1:]):
 				accum_grad.append(np.zeros([n1+1,n2]))
+
+		self.set_weights(d, k)
 
 		# needed for adaptive learning
 		gain = []
 		last_grad = []
 		if self.adaptive:
 			# local gain terms
-			for n1,n2 in zip(n_nodes[:-1],n_nodes[1:]):
+			for n1,n2 in zip(self.n_nodes[:-1],self.n_nodes[1:]):
 				gain.append(np.ones([n1+1,n2]))
 				# gradient values from previous iteration
 				last_grad.append(np.ones([n1+1,n2]))
@@ -116,27 +118,27 @@ class MultiLayerNet:
 
 		# set which fprop/bprop/loss function methods we want to use
 		if self.mode=='multilayer':
-			self.fprop_fn = self.fprop_mln
-			self.bprop_fn = self.bprop_mln
+			self.fprop = self.fprop_mln
+			self.bprop = self.bprop_mln
 			self.compute_loss = self.compute_mln_log_loss
 
 		elif self.mode=='sparse_autoencoder':
-			self.fprop_fn = self.fprop_sae
-			self.bprop_fn = self.bprop_sae
+			self.fprop = self.fprop_sae
+			self.bprop = self.bprop_sae
 			self.compute_loss = self.compute_sae_squared_loss
 
 		# uses the scipy routine for conjugate gradient
 		if self.update == 'conjugate_gradient':
-			w0 = self.unroll(self.weights)
+			w0 = utils.unroll(self.weights)
 			wf = fmin_cg(self.loss_fcn,w0,self.loss_grad,(X,y))
-			weights = self.reroll(wf)
+			weights = utils.reroll(wf,self.n_nodes)
 			self.weights = weights
 			
 		elif self.update == 'L-BFGS':
 			# apply the L-BFGS optimization routine and optimize weights
-			w0 = self.unroll(self.weights) # flatten weight matrices to a single vector
+			w0 = utils.unroll(self.weights) # flatten weight matrices to a single vector
 			res = fmin_l_bfgs_b(self.loss_fcn,w0,self.loss_grad,(X,y)) # apply lbfgs to find optimal weight vector
-			weights = self.reroll(res[0]) # re-roll to weight matrices
+			weights = utils.reroll(res[0],self.n_nodes) # re-roll to weight matrices
 			self.weights = weights
 
 		else:
@@ -322,7 +324,7 @@ class MultiLayerNet:
 		
 		if weights is None:
 			weights = self.weights
-		return self.compute_mln_class_log_loss(act,y) + 0.5*self.decay*sum([np.sum(w**2) for w in weights])
+		return self.compute_mln_class_log_loss(act[-1],y) + 0.5*self.decay*sum([np.sum(w**2) for w in weights])
 
 	def compute_sae_squared_loss(self,act,X,weights=None):
 		'''Computes the squared-loss for sparse autoencoders'''	
@@ -343,12 +345,12 @@ class MultiLayerNet:
 	# convenience functions for batch optimization methods, e.g. fmin_cg, fmin_l_bfgs_b
 
 	def loss_grad(self,w,X,y):
-		weights = self.reroll(w)
-		act = self.fprop_fn(X,weights)
-		grad = self.bprop_fn(X,y,act,weights)
-		return self.unroll(grad)
+		weights = utils.reroll(w,self.n_nodes)
+		act = self.fprop(X,weights)
+		grad = self.bprop(X,y,act,weights)
+		return utils.unroll(grad)
 
 	def loss_fcn(self,w,X,y):
-		weights = self.reroll(w)
-		act = self.fprop_fn(X,weights)
+		weights = utils.reroll(w,self.n_nodes)
+		act = self.fprop(X,weights)
 		return self.compute_loss(act,y,weights)

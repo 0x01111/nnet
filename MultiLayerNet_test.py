@@ -58,9 +58,9 @@ class testMultilayerNet(unittest.TestCase):
 			
 			# run fprop and compute the loss for both sides  
 			act = nnet.fprop_mln(self.X,weights_plus)
-			loss_plus = nnet.compute_mln_log_loss(act[-1], self.y, weights_plus)
+			loss_plus = nnet.compute_mln_log_loss(act, self.y, weights_plus)
 			act = nnet.fprop_mln(self.X,weights_minus)
-			loss_minus = nnet.compute_mln_log_loss(act[-1], self.y, weights_minus)
+			loss_minus = nnet.compute_mln_log_loss(act, self.y, weights_minus)
 			
 			ngrad[i] = 1.0*(loss_plus-loss_minus)/(2*eps) # ( E(weights[i]+eps) - E(weights[i]-eps) )/(2*eps)
 			
