@@ -1,8 +1,8 @@
 import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
+import MultiLayerNet as mln
 import cv2
-import SparseAutoencoder as sae
 
 def sample_images(I,w=8,h=8,n=10000):
 	'''Extracts n patches (flattened) of size w x h from one of the images in I
@@ -97,7 +97,7 @@ if __name__ == '__main__':
 	print 'Commencing high fidelity encoding-decoding and sparse pattern detection'
 
 	n_hid = 25 # set number of hidden units
-	sparse_ae = sae.Network(n_hid=n_hid) # initialize the network
+	sparse_ae = mln.Network(n_hid=n_hid) # initialize the network
 	sparse_ae.fit(X) # fit to the data
 	X_r = sparse_ae.transform(X,'reconstruct') # reconstruct the patches 
 	X_max = sparse_ae.compute_max_activations() # compute inputs which maximize the activation of each neuron

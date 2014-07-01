@@ -6,7 +6,7 @@ from scipy.optimize import fmin_cg,fmin_l_bfgs_b
 class MultiLayerNet:
 
 	def __init__(self,n_hid=[50],decay=0.0001,alpha=0.9,learn_rate=0.35,rho=0.01,
-		beta=1,adaptive='False',batch_size=100,update='improved_momentum',mode='multilayer'):
+		beta=1,adaptive='False',batch_size=100,update='L-BFGS',mode='multilayer'):
 
 		# neural net hyperparameters
 		self.n_hid = n_hid
@@ -152,10 +152,6 @@ class MultiLayerNet:
 				act = self.fprop(X[:,idx]) # get the activations from forward propagation
 				grad = self.bprop(X[:,idx],y[:,idx],act)
 
-				# uncomment for gradient checking
-				# gradient = self.unroll(grad)
-				# self.check_gradients(X[:,idx],y[:,idx],gradient)
-
 				if self.adaptive:
 					# same sign --> increase learning rate, opposite --> decrease 
 					for i,(d,l,g) in enumerate(zip(grad,last_grad,gain)):
@@ -196,7 +192,7 @@ class MultiLayerNet:
 
 		return act
 
-	def bprop_sae(self,X,act,weights):
+	def bprop_sae(self,X,act,weights=None):
 		'''Performs back-proparation - this only assumes a single layer'''				
 		    
 		if weights==None:
@@ -205,10 +201,9 @@ class MultiLayerNet:
 		avg_act = np.mean(act[0][1:],axis=1)
 
 		m = X.shape[1]
-		
 		dE_dW = []
 		dE_dz = -1.0*(X[1:]-act[1])*act[1]*(1-act[1])
-		dE_dW.append(1.0/m*np.dot(act,dE_dz.T) + self.decay*weights[1])
+		dE_dW.append(1.0/m*np.dot(act[0],dE_dz.T) + self.decay*weights[1])
 		dE_da = np.dot(weights[1],dE_dz)[1:] + (self.beta*(-1.0*self.rho/avg_act + (1-self.rho)/(1-avg_act)))[:,np.newaxis]
 		dE_dz = dE_da*act[0][1:]*(1-act[0][1:]) # no connection to the bias node
 		dE_dW.append(1.0/m*(np.dot(X,dE_dz.T))+self.decay*weights[0])
@@ -256,33 +251,6 @@ class MultiLayerNet:
 		# re-reverse and return
 		return dE_dW[::-1]
 
-	def bprop_mln_old(self,X,y,act,weights=None):
-		'''Performs backpropagation'''
-
-		if weights==None:
-			weights = self.weights
-
-		# reversing the lists makes it easier to work with 					
-		weights = weights[::-1]
-		act = act[::-1]
-
-		m = X.shape[1]
-		dE_dW = []
-		
-		# the final layer is a softmax, so calculate the derivative with respect to 
-		# the inputs to the softmax first
-		dE_dz = act[0]-y
-		
-		for i,a in enumerate(act[1:]):
-			dE_dW.append(1.0/m*np.dot(a,dE_dz.T) + self.decay*weights[i])
-			dE_dy = np.dot(weights[i],dE_dz)
-			dE_dz = (dE_dy*a*(1-a))[1:,:] # no connection to the bias node
-		
-		dE_dW.append(1.0/m*np.dot(X,dE_dz.T) + self.decay*weights[-1])
-
-		# re-reverse and return
-		return dE_dW[::-1]
-
 	def predict(self,X,y=None):
 		'''Uses fprop for predicting labels of data. If labels are also provided, also returns mce '''
 
@@ -295,6 +263,53 @@ class MultiLayerNet:
 		mce = 1.0-np.mean(1.0*(pred==np.argmax(y,axis=0)))
 		
 		return pred,mce
+
+	def transform(self,X,option='reduce'):
+		'''Either transforms the input data into a sparse representation, or
+		reconstructs it, based on the option
+		
+		Parameters:
+		-----------
+		X:	data matrix
+			d x m matrix m = # of training samples, d = # of features
+		
+		option:	'reduce' or 'reconstruct'
+				string
+		
+		Returns:
+		--------
+		X_t[1:]:	transformed features
+					self.n_hid x m, m = # of training examples, self.n_hid = # of hidden nodes
+		
+		X_r:	reconstructed features
+				d x m matrix m = # of training samples, d = # of features		
+		'''
+		
+		m = X.shape[1]
+		X = np.append(np.ones([1,m]),X,axis=0)
+		X_t,X_r = self.fprop(X)
+		
+		if option == 'reduce':
+			return X_t[1:]
+		elif option == 'reconstruct':
+			return X_r
+
+	def compute_max_activations(self):
+		'''Computes the input vectors which maximize the feature detectors
+		
+		Parameters:
+		-----------
+		None
+		
+		Returns:
+		--------
+		input vectors (unit-normalized) which maximize the value of 
+		the feature detectors
+		d x self.n_hid, d = # of features, self.n_hid = # of hidden units
+		
+		'''
+		return self.weights[0][1:]/np.sqrt(np.sum(self.weights[0][1:]**2,axis=0))
+
 
 	def compute_mln_class_log_loss(self,act,y):
 		'''Computes the cross-entropy classification loss of the model (without weight decay)'''
@@ -309,12 +324,12 @@ class MultiLayerNet:
 			weights = self.weights
 		return self.compute_mln_class_log_loss(act,y) + 0.5*self.decay*sum([np.sum(w**2) for w in weights])
 
-	def compute_sae_squared_loss(self,act,y,weights=None):
+	def compute_sae_squared_loss(self,act,X,weights=None):
 		'''Computes the squared-loss for sparse autoencoders'''	
 		avg_act = np.mean(act[0][1:],axis=1)
 		
 		# compute each of the individual costs
-		main_cost = 0.5*np.mean(np.sum((y-act[1])**2,axis=0))
+		main_cost = 0.5*np.mean(np.sum((X[1:]-act[1])**2,axis=0))
 		decay_cost = 0.5*self.decay*sum([np.sum(w**2) for w in weights])
 		sparse_cost = self.beta*np.sum(self.rho*np.log(self.rho/avg_act)+
 			(1-self.rho)*np.log((1-self.rho)/(1-avg_act)))
@@ -337,6 +352,3 @@ class MultiLayerNet:
 		weights = self.reroll(w)
 		act = self.fprop_fn(X,weights)
 		return self.compute_loss(act,y,weights)
-
-
-

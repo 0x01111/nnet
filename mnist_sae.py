@@ -13,7 +13,7 @@ print 'Number of training examples: ',X.shape[1]
 print 'Dimensionality of feature vectors: ',X.shape[0]
 
 n_hid = 50
-beta = 0.1,
+beta = 0.1
 rho = 0.005 
 decay=0.001
 

@@ -22,18 +22,19 @@ class testMultilayerNet(unittest.TestCase):
 		''' Gradient checking of backprop using a finite difference approximation. 
 		This essentially also tests 'fprop', compute_cost', and a few other functions 
 		along the way'''
+
 		n_hid = [50]
-		self.nnet = mln.MultiLayerNet(n_hid=n_hid)
+		nnet = mln.MultiLayerNet(n_hid=n_hid)
 
 		# initialize weights deterministically
-		n_nodes = [self.d]+self.nnet.n_hid+[self.k] # concatenate the input and output layers
+		n_nodes = [self.d]+nnet.n_hid+[self.k] # concatenate the input and output layers
 				
-		self.nnet.weights = []
+		nnet.weights = []
 		for n1,n2 in zip(n_nodes[:-1],n_nodes[1:]):
-			self.nnet.weights.append(0.01*np.cos(np.arange((n1+1)*n2)).reshape(n1+1,n2))
+			nnet.weights.append(0.01*np.cos(np.arange((n1+1)*n2)).reshape(n1+1,n2))
 
-		act = self.nnet.fprop_mln(self.X)
-		grad = self.nnet.bprop_mln(self.X,self.y,act)
+		act = nnet.fprop_mln(self.X)
+		grad = nnet.bprop_mln(self.X,self.y,act)
 		bgrad = utils.unroll(grad)
 
 		err_tol = 1e-10	# tolerance
@@ -41,13 +42,13 @@ class testMultilayerNet(unittest.TestCase):
 
 		# Numerical computation of the gradient..but checking every single derivative is 
 		# cumbersome, check 20% of the values
-		n = sum(np.size(w) for w in self.nnet.weights)
+		n = sum(np.size(w) for w in nnet.weights)
  		idx = np.random.permutation(n)[:(n/20)] # choose a random 20% 
  		ngrad = [None]*len(idx)
 
 		for i,x in enumerate(idx):
-			w_plus = utils.unroll(self.nnet.weights)
-			w_minus = utils.unroll(self.nnet.weights)
+			w_plus = utils.unroll(nnet.weights)
+			w_minus = utils.unroll(nnet.weights)
 			
 			# Perturb one of the weights by eps
 			w_plus[x] += eps
@@ -56,10 +57,10 @@ class testMultilayerNet(unittest.TestCase):
 			weights_minus = utils.reroll(w_minus,n_nodes)
 			
 			# run fprop and compute the loss for both sides  
-			act = self.nnet.fprop_mln(self.X,weights_plus)
-			loss_plus = self.nnet.compute_mln_log_loss(act[-1], self.y, weights_plus)
-			act = self.nnet.fprop_mln(self.X,weights_minus)
-			loss_minus = self.nnet.compute_mln_log_loss(act[-1], self.y, weights_minus)
+			act = nnet.fprop_mln(self.X,weights_plus)
+			loss_plus = nnet.compute_mln_log_loss(act[-1], self.y, weights_plus)
+			act = nnet.fprop_mln(self.X,weights_minus)
+			loss_minus = nnet.compute_mln_log_loss(act[-1], self.y, weights_minus)
 			
 			ngrad[i] = 1.0*(loss_plus-loss_minus)/(2*eps) # ( E(weights[i]+eps) - E(weights[i]-eps) )/(2*eps)
 			
