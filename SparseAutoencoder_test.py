@@ -102,9 +102,9 @@ class testSparseAutoencoder(unittest.TestCase):
 			
 			# run fprop and compute the loss for both sides  
 			act = sa.fprop_sae(self.X,weights_plus)
-			loss_plus = sa.compute_sae_squared_loss(act, self.X, weights_plus)
+			loss_plus = sa.compute_sae_squared_loss(act, self.X[1:], weights_plus)
 			act = sa.fprop_sae(self.X,weights_minus)
-			loss_minus = sa.compute_sae_squared_loss(act, self.X, weights_minus)
+			loss_minus = sa.compute_sae_squared_loss(act, self.X[1:], weights_minus)
 			
 			ngrad[i] = 1.0*(loss_plus-loss_minus)/(2*eps) # ( E(weights[i]+eps) - E(weights[i]-eps) )/(2*eps)
 			

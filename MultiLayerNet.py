@@ -5,8 +5,8 @@ from scipy.optimize import fmin_cg,fmin_l_bfgs_b
 
 class MultiLayerNet:
 
-	def __init__(self,n_hid=[50],decay=0.0001,alpha=0.9,learn_rate=0.35,rho=0.01,
-		beta=1,adaptive='False',batch_size=100,update='L-BFGS',mode='multilayer'):
+	def __init__(self,n_hid=[25],decay=0.0001,alpha=0.9,learn_rate=0.35,rho=0.01,
+		beta=3,adaptive='False',batch_size=100,update='L-BFGS',mode='multilayer'):
 
 		# neural net hyperparameters
 		self.n_hid = n_hid
@@ -57,7 +57,7 @@ class MultiLayerNet:
 			self.n_nodes = [d]+self.n_hid+[k] # concatenate the input and output layers
 			self.weights = []
 			for n1,n2 in zip(self.n_nodes[:-1],self.n_nodes[1:]):
-				self.weights.append(0.1*np.random.rand(n1+1,n2))
+				self.weights.append(0.5*np.random.rand(n1+1,n2))
 
 		# chooses values in the range [-sqrt(6/(d+nhid+1)), sqrt(6/(d+nhid+1))]
 		# v = np.sqrt(6./(d+self.n_hid+1))
@@ -194,7 +194,7 @@ class MultiLayerNet:
 
 		return act
 
-	def bprop_sae(self,X,act,weights=None):
+	def bprop_sae(self,X,y,act,weights=None):
 		'''Performs back-proparation - this only assumes a single layer'''				
 		    
 		if weights==None:
@@ -204,7 +204,7 @@ class MultiLayerNet:
 
 		m = X.shape[1]
 		dE_dW = []
-		dE_dz = -1.0*(X[1:]-act[1])*act[1]*(1-act[1])
+		dE_dz = -1.0*(y-act[1])*act[1]*(1-act[1])
 		dE_dW.append(1.0/m*np.dot(act[0],dE_dz.T) + self.decay*weights[1])
 		dE_da = np.dot(weights[1],dE_dz)[1:] + (self.beta*(-1.0*self.rho/avg_act + (1-self.rho)/(1-avg_act)))[:,np.newaxis]
 		dE_dz = dE_da*act[0][1:]*(1-act[0][1:]) # no connection to the bias node
@@ -331,7 +331,7 @@ class MultiLayerNet:
 		avg_act = np.mean(act[0][1:],axis=1)
 		
 		# compute each of the individual costs
-		main_cost = 0.5*np.mean(np.sum((X[1:]-act[1])**2,axis=0))
+		main_cost = 0.5*np.mean(np.sum((X-act[1])**2,axis=0))
 		decay_cost = 0.5*self.decay*sum([np.sum(w**2) for w in weights])
 		sparse_cost = self.beta*np.sum(self.rho*np.log(self.rho/avg_act)+
 			(1-self.rho)*np.log((1-self.rho)/(1-avg_act)))

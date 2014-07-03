@@ -97,7 +97,7 @@ if __name__ == '__main__':
 	print 'Commencing high fidelity encoding-decoding and sparse pattern detection'
 
 	n_hid = [25] # set number of hidden units
-	sparse_ae = mln.MultiLayerNet(n_hid=n_hid) # initialize the network
+	sparse_ae = mln.MultiLayerNet(n_hid=n_hid,mode='sparse_autoencoder') # initialize the network
 	sparse_ae.fit(X,X) # fit to the data
 	X_r = sparse_ae.transform(X,'reconstruct') # reconstruct the patches 
 	X_max = sparse_ae.compute_max_activations() # compute inputs which maximize the activation of each neuron
@@ -107,4 +107,4 @@ if __name__ == '__main__':
 
 	files = np.load('image_bases.npz')
 	X_max = files['X_max']
-	visualize_image_bases(X_max, n_hid)
+	visualize_image_bases(X_max, n_hid[0])
