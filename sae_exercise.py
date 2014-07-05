@@ -2,6 +2,7 @@ import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
 import MultiLayerNet as mln
+import Autoencoder as ae
 import cv2
 
 def sample_images(I,w=8,h=8,n=10000):
@@ -42,7 +43,6 @@ def sample_images(I,w=8,h=8,n=10000):
 
 	# rescale to [0.1,0.9]
 	X = 0.4*(X+1)+0.1
-	# import pdb; pdb.set_trace()
 	return X
 
 def load_images(mat_file):
@@ -96,12 +96,24 @@ if __name__ == '__main__':
 
 	print 'Commencing high fidelity encoding-decoding and sparse pattern detection'
 
-	n_hid = [25] # set number of hidden units
-	sparse_ae = mln.MultiLayerNet(n_hid=n_hid,mode='sparse_autoencoder') # initialize the network
-	sparse_ae.fit(X,X) # fit to the data
-	X_r = sparse_ae.transform(X,'reconstruct') # reconstruct the patches 
-	X_max = sparse_ae.compute_max_activations() # compute inputs which maximize the activation of each neuron
+	# n_hid = [25] # set number of hidden units
+	# sparse_ae = mln.MultiLayerNet(n_hid=n_hid,mode='sparse_autoencoder') # initialize the network
+	# sparse_ae.fit(X,X) # fit to the data
+	# X_r = sparse_ae.transform(X,'reconstruct') # reconstruct the patches 
+	# X_max = sparse_ae.compute_max_activations() # compute inputs which maximize the activation of each neuron
 	
+	d = X.shape[0] # input dimension
+	k = d # output dimension
+	n_hid = [25] # number of hidden nodes
+	decay = 0.0001
+	beta = 3
+	rho = 0.01
+
+	sae = ae.Autoencoder(d=d,k=k,n_hid=n_hid,decay=decay,beta=beta,rho=rho)
+	sae.fit(X)
+	X_r = sae.transform(X,'reconstruct')
+	X_max = sae.compute_max_activations()
+
 	print 'Demonstrating feasibility'
 	np.savez('image_bases',X_max=X_max)
 

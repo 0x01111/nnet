@@ -63,7 +63,7 @@ class Network:
 		self.n_hid = np.array([d]+self.n_hid+[k]) # augment with the input and output layers
 		# (d+1)*n_hid[0] + (n_hid[0]+1)*n_hid[1] + (n_hid[1]+1)*n_hid[2]+... = 
 		num_param = np.sum(self.n_hid[:-1]*self.n_hid[1:]) + np.sum(self.n_hid[1:])
-		self.wts = np.empty(num_param)
+		self.wts_ = np.empty(num_param)
 		
 		accum_grad = []
 		# needed for momentum, improved_momentum
@@ -150,11 +150,11 @@ class Network:
 			curr_idx += n_param
 
 
-	def fprop_old(self,X,wts=None):
+	def fprop(self,X,wts=None):
 		'''Perform forward propagation'''
 
 		if wts==None:
-			wts_ = self.wts_
+			wts = self.wts_
 
 		m = X.shape[1] # number of training cases in this batch of data
 		act = [np.append(np.ones([1,m]),self.sigmoid(np.dot(wts[0].T,X)),axis=0)] # use the first data matrix to compute the first activation
