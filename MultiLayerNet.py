@@ -196,10 +196,8 @@ class MultiLayerNet:
 
 	def bprop_sae(self,X,y,act,weights=None):
 		'''Performs back-proparation - this only assumes a single layer'''				
-		    
 		if weights==None:
 			weights = self.weights
-
 		avg_act = np.mean(act[0][1:],axis=1)
 
 		m = X.shape[1]
@@ -209,6 +207,7 @@ class MultiLayerNet:
 		dE_da = np.dot(weights[1],dE_dz)[1:] + (self.beta*(-1.0*self.rho/avg_act + (1-self.rho)/(1-avg_act)))[:,np.newaxis]
 		dE_dz = dE_da*act[0][1:]*(1-act[0][1:]) # no connection to the bias node
 		dE_dW.append(1.0/m*(np.dot(X,dE_dz.T))+self.decay*weights[0])
+
 
 		return dE_dW[::-1]
 

@@ -5,22 +5,25 @@ import nnetutils as nu
 import NeuralNetworkCore
 
 class Autoencoder(NeuralNetworkCore.Network):
-
+	
 	def __init__(self,d=64,k=64,n_hid=[25],activ=[nu.sigmoid,nu.sigmoid],
-		decay=0.001,rho=0.1,beta=3,update='L-BFGS'):
+		decay=0.0001,rho=0.01,beta=3,update='L-BFGS'):
 		
-		# set the parameters of the superclass neural net core
-		NeuralNetworkCore.Network.__init__(self,d=d,k=k,n_hid=n_hid,activ=activ,update=update)
+		# set the parameters of the superclass
+		NeuralNetworkCore.Network.__init__(self,d=d,k=k,n_hid=n_hid,activ=activ,
+			cost=self.cost, bprop=self.bprop, update=update)
 
 		# set hyperparameters
 		self.decay = decay # regularization coefficient
-		self.rho = 0.1 # activation constraint
-		self.beta = 3 # sparsity coefficient
+		self.rho = rho # activation constraint
+		self.beta = beta # sparsity coefficient
 
-
-	def loss(self,y,act,wts):
+	def cost(self,y,act,wts=None):
 		'''Computes the squared-loss error for autoencoders'''	
 		
+		if wts==None:
+			wts = self.wts_
+
 		avg_act = np.mean(act[0][1:],axis=1)
 		
 		# compute each of the individual costs
@@ -32,9 +35,12 @@ class Autoencoder(NeuralNetworkCore.Network):
 		
 		return E
 
-	def loss_grad(self,X,y,act,wts):
+	def bprop(self,X,y,act,wts=None):
 		'''Performs back-proparation to compute the gradients with respect to the weights'''				
-		    
+		
+		if wts==None:
+			wts = self.wts_
+
 		avg_act = np.mean(act[0][1:],axis=1)
 
 		m = X.shape[1]
@@ -44,8 +50,8 @@ class Autoencoder(NeuralNetworkCore.Network):
 		dE_da = np.dot(wts[1],dE_dz)[1:] + (self.beta*(-1.0*self.rho/avg_act + (1-self.rho)/(1-avg_act)))[:,np.newaxis]
 		dE_dz = dE_da*act[0][1:]*(1-act[0][1:])
 		dE_dW.append(1.0/m*(np.dot(X,dE_dz.T))+self.decay*wts[0])
-
-		return dE_dW
+		
+		return dE_dW[::-1]
 
 	def fit(self,X):
 		'''Fits the weights of the autoencoder
@@ -58,7 +64,7 @@ class Autoencoder(NeuralNetworkCore.Network):
 		--------
 		wts_	
 		'''
-		return self._fit(X,X,loss=self.loss,loss_grad=self.loss_grad,method='L-BFGS')
+		return self._fit(X,X,method='L-BFGS')
 
 	def transform(self,X,option='reduce'):
 		'''Either transforms the input data or reconstructs it, based on the option
@@ -103,4 +109,4 @@ class Autoencoder(NeuralNetworkCore.Network):
 		d x self.n_hid, d = # of features, self.n_hid = # of hidden units
 		
 		'''
-		return self.wts[0][1:]/np.sqrt(np.sum(self.wts[0][1:]**2,axis=0))
+		return self.wts_[0][1:]/np.sqrt(np.sum(self.wts_[0][1:]**2,axis=0))

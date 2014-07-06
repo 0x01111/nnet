@@ -2,15 +2,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import fmin_cg,fmin_l_bfgs_b
 import nnetutils as nu 
+import utils
 
 class Network:
 
-	def __init__(self,d=64,k=2,n_hid=[25],activ=[nu.sigmoid,nu.softmax],update='conjugate_gradient'):
+	def __init__(self,d=64,k=2,n_hid=[25],activ=[nu.sigmoid,nu.softmax],
+		cost=None,bprop=None,update='conjugate_gradient'):
 
 		# network parameters
 		self.n_nodes = [d]+n_hid+[k] # number of nodes in each layer 
 		self.activ = activ
 		self.update = update
+		self.cost = cost
+		self.bprop = bprop
 
 	def print_init_settings(self):
 		''' Prints initialization settings '''
@@ -43,7 +47,7 @@ class Network:
 		# self.w_i2h_ = 2.0*v*np.random.rand(d+1,self.n_hid) - v
 		# self.w_h2o_ = 2.0*v*np.random.rand(self.n_hid+1,d) - v
 
-	def _fit(self,X,y,loss=None,loss_grad=None,method='L-BFGS',n_iter=1000):
+	def _fit(self,X,y,method='L-BFGS',n_iter=1000):
 		''' Fits the weights of the neural network, given the input-output data, loss function,
 		loss gradients, and the method of optimization
 		
@@ -64,9 +68,6 @@ class Network:
 		--------
 		wts_: list of ndarray matrices corresponding to the wts_ of the neural network
 		'''
-		self.loss = loss
-		self.loss_grad = loss_grad
-
 		m = X.shape[1] # number of instances
 
 		# append ones to account for bias
@@ -98,16 +99,16 @@ class Network:
 		# uses the scipy routine for conjugate gradient
 		if self.update == 'conjugate_gradient':
 			w0 = nu.unroll(self.wts_)
-			wf = fmin_cg(self.m_loss,w0,self.m_grad,(X,y))
-			wts_ = nu.reroll(wf,self.n_nodes)
-			self.wts_ = wts_
+			wf = fmin_cg(self.loss,w0,self.loss_grad,(X,y))
+			wts = nu.reroll(wf,self.n_nodes)
+			self.wts_ = wts
 			
 		elif self.update == 'L-BFGS':
 			# apply the L-BFGS optimization routine and optimize wts_
 			w0 = nu.unroll(self.wts_) # flatten weight matrices to a single vector
-			res = fmin_l_bfgs_b(self.m_loss,w0,self.m_grad,(X,y)) # apply lbfgs to find optimal weight vector
-			wts_ = nu.reroll(res[0],self.n_nodes) # re-roll to weight matrices
-			self.wts_ = wts_
+			res = fmin_l_bfgs_b(self.loss,w0,self.loss_grad,(X,y)) # apply lbfgs to find optimal weight vector
+			wts = nu.reroll(res[0],self.n_nodes) # re-roll to weight matrices
+			self.wts_ = wts
 
 		# else:
 		# 	for i in range(n_iter):
@@ -150,7 +151,6 @@ class Network:
 
 	def fprop(self,X,wts=None):
 		'''Performs general forward propagation and stores intermediate activation values'''
-
 		if wts==None:
 			wts = self.wts_
 
@@ -160,9 +160,6 @@ class Network:
 			act.append(np.vstack((np.ones([1,m]),self.activ[i+1](np.dot(w.T,act[i]))))) # sigmoid activations
 		act.append(self.activ[-1](np.dot(wts[-1].T,act[-1])))
 		return act
-
-
-		return dE_dW[::-1]
 
 	def bprop(self,X,y,act,wts_=None):
 		'''Performs backpropagation'''
@@ -204,18 +201,18 @@ class Network:
 		
 		return pred,mce
 
-	def compute_mln_class_log_loss(self,act,y):
+	def mln_class_log_loss(self,act,y):
 		'''Computes the cross-entropy classification loss of the model (without weight decay)'''
 		
 		#  E = 1/N*sum(-y*log(p)) - negative log probability of the right answer
 		return np.mean(np.sum(-1.0*y*np.log(act),axis=0))
 
-	def compute_mln_log_loss(self,act,y,wts_=None):
+	def mln_log_loss(self,act,y,wts_=None):
 		'''Computes the cross entropy classification (with weight decay)'''
 		
 		if wts_ is None:
 			wts_ = self.wts_
-		return self.compute_mln_class_log_loss(act[-1],y) + 0.5*self.decay*sum([np.sum(w**2) for w in wts_])
+		return self.mln_class_log_loss(act[-1],y) + 0.5*self.decay*sum([np.sum(w**2) for w in wts_])
 	
 	def clamp(self,a,minv,maxv):
 		''' imposes a range on all values of a matrix '''
@@ -223,15 +220,14 @@ class Network:
 
 	# convenience functions for batch optimization methods, e.g. fmin_cg, fmin_l_bfgs_b
 
-	def m_grad(self,w,X,y):
-		''' modified grad function '''
-		wts_ = nu.reroll(w,self.n_nodes)
-		act = self.fprop(X,wts_)
-		grad = self.loss_grad(X,y,act,wts_)
-		return nu.unroll(grad)
-
-	def m_loss(self,w,X,y):
+	def loss(self,w,X,y):
 		''' modified loss function '''
-		wts_ = nu.reroll(w,self.n_nodes)
-		act = self.fprop(X,wts_)
-		return self.loss(y,act,wts_)
+		wts = nu.reroll(w,self.n_nodes)
+		act = self.fprop(X,wts)
+		return self.cost(y,act,wts)
+	def loss_grad(self,w,X,y):
+		''' modified grad function '''
+		wts = nu.reroll(w,self.n_nodes)
+		act = self.fprop(X,wts)
+		grad = self.bprop(X,y,act,wts)
+		return nu.unroll(grad)
