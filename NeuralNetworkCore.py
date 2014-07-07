@@ -4,6 +4,8 @@ from scipy.optimize import fmin_cg,fmin_l_bfgs_b
 import nnetutils as nu 
 import utils
 
+#TODO: set_weights for different options
+#TODO: make 'acts' a member variable
 class Network:
 
 	def __init__(self,d=64,k=2,n_hid=[25],activ=[nu.sigmoid,nu.softmax],
@@ -47,9 +49,8 @@ class Network:
 		# self.w_i2h_ = 2.0*v*np.random.rand(d+1,self.n_hid) - v
 		# self.w_h2o_ = 2.0*v*np.random.rand(self.n_hid+1,d) - v
 
-	def _fit(self,X,y,method='L-BFGS',n_iter=1000):
-		''' Fits the weights of the neural network, given the input-output data, loss function,
-		loss gradients, and the method of optimization
+	def _fit(self,X,y,n_iter=1000):
+		''' Fits the weights of the neural network, given the input-output data
 		
 		Parameters:
 		-----------
@@ -154,79 +155,25 @@ class Network:
 		if wts==None:
 			wts = self.wts_
 
-		m = X.shape[1] # number of training cases in this batch of data
+		m = X.shape[1] # number of training cases
 		act = [np.vstack((np.ones([1,m]),self.activ[0](np.dot(wts[0].T,X))))] # use the first data matrix to compute the first activation
 		for i,w in enumerate(wts[1:-1]):
 			act.append(np.vstack((np.ones([1,m]),self.activ[i+1](np.dot(w.T,act[i]))))) # sigmoid activations
 		act.append(self.activ[-1](np.dot(wts[-1].T,act[-1])))
 		return act
 
-	def bprop(self,X,y,act,wts_=None):
-		'''Performs backpropagation'''
-
-		if wts_==None:
-			wts_ = self.wts_
-
-		# reversing the lists makes it easier to work with 					
-		wts_ = wts_[::-1]
-		act = act[::-1]
-
-		m = X.shape[1]
-		dE_dW = []
-		
-		# the final layer is a softmax, so calculate the derivative with respect to 
-		# the inputs to the softmax first
-		dE_dz = act[0]-y
-		
-		for i,a in enumerate(act[1:]):
-			dE_dW.append(1.0/m*np.dot(a,dE_dz.T) + self.decay*wts_[i])
-			dE_da = np.dot(wts_[i],dE_dz)
-			dE_dz = (dE_da*a*(1-a))[1:,:] # no connection to the bias node
-		
-		dE_dW.append(1.0/m*np.dot(X,dE_dz.T) + self.decay*wts_[-1])
-
-		# re-reverse and return
-		return dE_dW[::-1]
-
-	def predict(self,X,y=None):
-		'''Uses fprop for predicting labels of data. If labels are also provided, also returns mce '''
-
-		m = X.shape[1]
-		X = np.append(np.ones([1,m]),X,axis=0)
-		act = self.fprop(X)
-		pred = np.argmax(act[-1],axis=0) # only the final activation contains the 
-		if y==None:
-			return pred
-		mce = 1.0-np.mean(1.0*(pred==np.argmax(y,axis=0)))
-		
-		return pred,mce
-
-	def mln_class_log_loss(self,act,y):
-		'''Computes the cross-entropy classification loss of the model (without weight decay)'''
-		
-		#  E = 1/N*sum(-y*log(p)) - negative log probability of the right answer
-		return np.mean(np.sum(-1.0*y*np.log(act),axis=0))
-
-	def mln_log_loss(self,act,y,wts_=None):
-		'''Computes the cross entropy classification (with weight decay)'''
-		
-		if wts_ is None:
-			wts_ = self.wts_
-		return self.mln_class_log_loss(act[-1],y) + 0.5*self.decay*sum([np.sum(w**2) for w in wts_])
-	
-	def clamp(self,a,minv,maxv):
-		''' imposes a range on all values of a matrix '''
-		return np.fmax(minv,np.fmin(maxv,a))
-
-	# convenience functions for batch optimization methods, e.g. fmin_cg, fmin_l_bfgs_b
-
 	def loss(self,w,X,y):
-		''' modified loss function '''
+		''' convenience loss function for batch optimization methods, e.g.,
+		fmin_cg, fmin_l_bfgs_b '''
+
 		wts = nu.reroll(w,self.n_nodes)
 		act = self.fprop(X,wts)
 		return self.cost(y,act,wts)
+
 	def loss_grad(self,w,X,y):
-		''' modified grad function '''
+		''' convenience grad function for batch optimization methods, e.g.,
+		fmin_cg, fmin_l_bfgs_b '''
+
 		wts = nu.reroll(w,self.n_nodes)
 		act = self.fprop(X,wts)
 		grad = self.bprop(X,y,act,wts)

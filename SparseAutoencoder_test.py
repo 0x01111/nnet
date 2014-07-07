@@ -67,6 +67,7 @@ class testSparseAutoencoder(unittest.TestCase):
 		''' Gradient checking of backprop using a finite difference approximation. 
 		This essentially also tests 'fprop', compute_cost', and a few other functions 
 		along the way '''
+
 		n_hid = [50]
 		sa = mln.MultiLayerNet(n_hid=n_hid)
 
@@ -112,15 +113,15 @@ class testSparseAutoencoder(unittest.TestCase):
 		self.assertLess(cerr,err_tol)
 
 	def test_core_sae_bprop(self):
-		
-		n_hid = [50]
+		n_hid = 50
 		ae = autoencoder.Autoencoder(d=self.d,k=self.d,n_hid=n_hid)
 				
 		ae.wts_ = []
 		for n1,n2 in zip(ae.n_nodes[:-1],ae.n_nodes[1:]):
 			ae.wts_.append(0.01*np.cos(np.arange((n1+1)*n2)).reshape(n1+1,n2))
+		
 		act = ae.fprop(self.X)
-		grad = ae.loss_grad(self.X,self.X[1:],act)
+		grad = ae.bprop(self.X,self.X[1:],act)
 		bgrad = nnetutils.unroll(grad)
 
 		err_tol = 1e-9	# tolerance
@@ -144,9 +145,9 @@ class testSparseAutoencoder(unittest.TestCase):
 			
 			# run fprop and compute the loss for both sides  
 			act = ae.fprop(self.X,weights_plus)
-			loss_plus = ae.loss(self.X[1:], act,weights_plus)
+			loss_plus = ae.cost(self.X[1:], act,weights_plus)
 			act = ae.fprop(self.X,weights_minus)
-			loss_minus = ae.loss(self.X[1:], act,weights_minus)
+			loss_minus = ae.cost(self.X[1:], act,weights_minus)
 			
 			ngrad[i] = 1.0*(loss_plus-loss_minus)/(2*eps) # ( E(weights[i]+eps) - E(weights[i]-eps) )/(2*eps)
 			

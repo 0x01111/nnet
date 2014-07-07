@@ -4,13 +4,13 @@ from scipy.optimize import fmin_cg,fmin_l_bfgs_b
 import nnetutils as nu
 import NeuralNetworkCore
 
+# TODO: add try/except
 class Autoencoder(NeuralNetworkCore.Network):
 	
-	def __init__(self,d=64,k=64,n_hid=[25],activ=[nu.sigmoid,nu.sigmoid],
-		decay=0.0001,rho=0.01,beta=3,update='L-BFGS'):
-		
+	def __init__(self,d=64,k=64,n_hid=25,decay=0.0001,rho=0.01,beta=3,update='L-BFGS'):
+	
 		# set the parameters of the superclass
-		NeuralNetworkCore.Network.__init__(self,d=d,k=k,n_hid=n_hid,activ=activ,
+		NeuralNetworkCore.Network.__init__(self,d=d,k=k,n_hid=[n_hid],activ=[nu.sigmoid,nu.sigmoid],
 			cost=self.cost, bprop=self.bprop, update=update)
 
 		# set hyperparameters
@@ -64,7 +64,7 @@ class Autoencoder(NeuralNetworkCore.Network):
 		--------
 		wts_	
 		'''
-		return self._fit(X,X,method='L-BFGS')
+		return self._fit(X,X)
 
 	def transform(self,X,option='reduce'):
 		'''Either transforms the input data or reconstructs it, based on the option

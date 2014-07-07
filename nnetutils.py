@@ -26,9 +26,13 @@ def reroll(v,n_nodes):
 
 	idx = 0
 	r_wts = []
-	for r,c in zip(n_nodes[:-1],n_nodes[1:]):
-		w_size = (r+1)*c
-		r_wts.append(np.reshape(v[idx:idx+w_size],(r+1,c)))
+	for row,col in zip(n_nodes[:-1],n_nodes[1:]):
+		w_size = (row+1)*col
+		r_wts.append(np.reshape(v[idx:idx+w_size],(row+1,col)))
 		idx += w_size
 	
 	return r_wts
+
+def clamp(a,minv,maxv):
+	''' imposes a range on all values of a matrix '''
+	return np.fmax(minv,np.fmin(maxv,a))
