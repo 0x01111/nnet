@@ -20,21 +20,25 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		# set hyperparameters
 		self.decay = decay # regularization coefficient
 
-	def cost(self,y,act,wts=None):
+	def cost(self,y,act=None,wts=None):
 		''' Computes the cost function'''
 		if wts==None:
 			wts = self.wts_
+		if act==None:
+			act = self.act
 
 		#  E = 1/N*sum(-y*log(p)) - negative log probability of the right answer
 		E = np.mean(np.sum(-1.0*y*np.log(act[-1]),axis=0)) + 0.5*self.decay*sum([np.sum(w**2) for w in wts])
 
 		return E
 
-	def bprop(self,X,y,act,wts=None):
+	def bprop(self,X,y,act=None,wts=None):
 		'''Performs backpropagation'''
 
 		if wts==None:
 			wts = self.wts_
+		if act==None:
+			act = self.act
 
 		# reversing the lists makes it easier to work with 					
 		wts = wts[::-1]
@@ -50,7 +54,7 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		for i,a in enumerate(act[1:]):
 			dE_dW.append(1.0/m*np.dot(a,dE_dz.T) + self.decay*wts[i])
 			dE_da = np.dot(wts[i],dE_dz)
-			dE_dz = (dE_da*a*(1-a))[1:,:] # no connection to the bias node
+			dE_dz = (dE_da*a*(1-a))[1:] # no connection to the bias node
 		
 		dE_dW.append(1.0/m*np.dot(X,dE_dz.T) + self.decay*wts[-1])
 
@@ -86,8 +90,8 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		'''
 		m = X.shape[1]
 		X = np.append(np.ones([1,m]),X,axis=0)
-		act = self.fprop(X)
-		pred = np.argmax(act[-1],axis=0) # only the final activation contains the 
+		self.fprop(X)
+		pred = np.argmax(self.act[-1],axis=0) # only the final activation contains the 
 		if y==None:
 			return pred
 		mce = 1.0-np.mean(1.0*(pred==np.argmax(y,axis=0)))

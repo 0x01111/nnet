@@ -18,11 +18,13 @@ class Autoencoder(NeuralNetworkCore.Network):
 		self.rho = rho # activation constraint
 		self.beta = beta # sparsity coefficient
 
-	def cost(self,y,act,wts=None):
+	def cost(self,y,act=None,wts=None):
 		'''Computes the squared-loss error for autoencoders'''	
 		
 		if wts==None:
 			wts = self.wts_
+		if act==None:
+			act = self.act
 
 		avg_act = np.mean(act[0][1:],axis=1)
 		
@@ -35,20 +37,22 @@ class Autoencoder(NeuralNetworkCore.Network):
 		
 		return E
 
-	def bprop(self,X,y,act,wts=None):
+	def bprop(self,X,y,act=None,wts=None):
 		'''Performs back-proparation to compute the gradients with respect to the weights'''				
 		
 		if wts==None:
 			wts = self.wts_
+		if act==None:
+			act = self.act
 
-		avg_act = np.mean(act[0][1:],axis=1)
+		avg_act = np.mean(self.act[0][1:],axis=1)
 
 		m = X.shape[1]
 		dE_dW = []
 		dE_dz = -1.0*(y-act[1])*act[1]*(1-act[1])
 		dE_dW.append(1.0/m*np.dot(act[0],dE_dz.T) + self.decay*wts[1])
 		dE_da = np.dot(wts[1],dE_dz)[1:] + (self.beta*(-1.0*self.rho/avg_act + (1-self.rho)/(1-avg_act)))[:,np.newaxis]
-		dE_dz = dE_da*act[0][1:]*(1-act[0][1:])
+		dE_dz = dE_da*act[0][1:]*(1-self.act[0][1:])
 		dE_dW.append(1.0/m*(np.dot(X,dE_dz.T))+self.decay*wts[0])
 		
 		return dE_dW[::-1]
@@ -88,10 +92,12 @@ class Autoencoder(NeuralNetworkCore.Network):
 		
 		m = X.shape[1]
 		X = np.append(np.ones([1,m]),X,axis=0)
-		X_t,X_r = self.fprop(X)
+		self.fprop(X)
+		X_t = self.act[0][1:]
+		X_r = self.act[1]
 		
 		if option == 'reduce':
-			return X_t[1:]
+			return X_t
 		elif option == 'reconstruct':
 			return X_r
 

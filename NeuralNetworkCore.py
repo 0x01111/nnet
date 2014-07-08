@@ -4,15 +4,14 @@ from scipy.optimize import fmin_cg,fmin_l_bfgs_b
 import nnetutils as nu 
 import utils
 
-#TODO: set_weights for different options
-#TODO: make 'acts' a member variable
 class Network:
 
 	def __init__(self,d=64,k=2,n_hid=[25],activ=[nu.sigmoid,nu.softmax],
 		cost=None,bprop=None,update='conjugate_gradient'):
 
 		# network parameters
-		self.n_nodes = [d]+n_hid+[k] # number of nodes in each layer 
+		self.n_nodes = [d]+n_hid+[k] # number of nodes in each layer
+		self.act = (len(self.n_nodes)-1)*[None]
 		self.activ = activ
 		self.update = update
 		self.cost = cost
@@ -150,31 +149,39 @@ class Network:
 			
 		return self
 
+	def mini_batch_update(X,y):
+		'''Runs a single iteration of fprop/bprop on a mini-batch (for online training, X will only be one training example) 
+		
+		Parameters:
+		-----------
+		
+		Returns:
+		--------
+		
+		'''
+
 	def fprop(self,X,wts=None):
 		'''Performs general forward propagation and stores intermediate activation values'''
 		if wts==None:
 			wts = self.wts_
 
 		m = X.shape[1] # number of training cases
-		act = [np.vstack((np.ones([1,m]),self.activ[0](np.dot(wts[0].T,X))))] # use the first data matrix to compute the first activation
+		self.act[0] = np.vstack((np.ones([1,m]),self.activ[0](np.dot(wts[0].T,X)))) # use the first data matrix to compute the first activation
 		for i,w in enumerate(wts[1:-1]):
-			act.append(np.vstack((np.ones([1,m]),self.activ[i+1](np.dot(w.T,act[i]))))) # sigmoid activations
-		act.append(self.activ[-1](np.dot(wts[-1].T,act[-1])))
-		return act
+			self.act[i+1] = np.vstack((np.ones([1,m]),self.activ[i+1](np.dot(w.T,self.act[i])))) # sigmoid activations
+		self.act[-1] = self.activ[-1](np.dot(wts[-1].T,self.act[-2]))
 
 	def loss(self,w,X,y):
 		''' convenience loss function for batch optimization methods, e.g.,
 		fmin_cg, fmin_l_bfgs_b '''
 
 		wts = nu.reroll(w,self.n_nodes)
-		act = self.fprop(X,wts)
-		return self.cost(y,act,wts)
+		self.fprop(X,wts)
+		return self.cost(y,wts=wts)
 
 	def loss_grad(self,w,X,y):
 		''' convenience grad function for batch optimization methods, e.g.,
 		fmin_cg, fmin_l_bfgs_b '''
-
 		wts = nu.reroll(w,self.n_nodes)
-		act = self.fprop(X,wts)
-		grad = self.bprop(X,y,act,wts)
+		grad = self.bprop(X,y,wts=wts)
 		return nu.unroll(grad)

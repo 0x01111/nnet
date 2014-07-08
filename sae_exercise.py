@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
 	d = X.shape[0] # input dimension
 	k = d # output dimension
-	n_hid = [25] # number of hidden nodes
+	n_hid = 25 # number of hidden nodes
 	decay = 0.0001
 	beta = 3
 	rho = 0.01
@@ -109,4 +109,4 @@ if __name__ == '__main__':
 	np.savez('image_bases',X_max=X_max)
 	files = np.load('image_bases.npz')
 	X_max = files['X_max']
-	visualize_image_bases(X_max, n_hid[0])
+	visualize_image_bases(X_max, n_hid)
