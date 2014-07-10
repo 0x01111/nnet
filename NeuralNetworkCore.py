@@ -1,8 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import fmin_cg,fmin_l_bfgs_b
-import nnetutils as nu 
-import utils
+import nnetutils as nu
 
 class Network:
 
@@ -20,7 +19,7 @@ class Network:
 	def print_init_settings(self):
 		''' Prints initialization settings '''
 
-	def set_weights(self,method='random'):
+	def set_weights(self,method='random',wts=None):
 		'''sets the wts_ of the neural network based on the specified method
 		
 		Parameters:
@@ -37,10 +36,22 @@ class Network:
 		self.wts_
 
 		'''
-		if method=='random':
-			self.wts_ = []
-			for n1,n2 in zip(self.n_nodes[:-1],self.n_nodes[1:]):
-				self.wts_.append(0.5*np.random.rand(n1+1,n2))
+
+		if wts == None:
+
+			self.wts_ = (len(self.n_nodes)-1)*[None]
+
+			if method=='random':
+				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
+					self.wts_[i] = 0.5*np.random.rand(n1+1,n2)
+
+			elif method=='alt_random':
+				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
+					v = np.sqrt(6./(n1+n2+1))
+					self.wts_[i] = 2.0*v*np.random.rand(n1+1,n2) - v
+		else:
+			self.wts_ = wts
+
 
 		# chooses values in the range [-sqrt(6/(d+nhid+1)), sqrt(6/(d+nhid+1))]
 		# v = np.sqrt(6./(d+self.n_hid+1))
@@ -48,7 +59,7 @@ class Network:
 		# self.w_i2h_ = 2.0*v*np.random.rand(d+1,self.n_hid) - v
 		# self.w_h2o_ = 2.0*v*np.random.rand(self.n_hid+1,d) - v
 
-	def _fit(self,X,y,n_iter=1000):
+	def _fit(self,X,y):
 		''' Fits the weights of the neural network, given the input-output data
 		
 		Parameters:
@@ -79,7 +90,7 @@ class Network:
 		# 	for n1,n2 in zip(self.n_nodes[:-1],self.n_nodes[1:]):
 		# 		accum_grad.append(np.zeros([n1+1,n2]))
 
-		self.set_weights() # assign initial weight values
+		self.set_weights(method='alt_random') # assign initial weight values
 
 		# # needed for adaptive learning
 		# gain = []
@@ -149,7 +160,7 @@ class Network:
 			
 		return self
 
-	def mini_batch_update(X,y):
+	def mini_batch_fit(X,y):
 		'''Runs a single iteration of fprop/bprop on a mini-batch (for online training, X will only be one training example) 
 		
 		Parameters:

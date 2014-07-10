@@ -1,12 +1,10 @@
 This commit:
 ------------
-- Remove SparseAutoencoder.py and MultiLayerNet.py - obsolete/no longer needed!
-- clean up the testing code to include multilayer net (with 2+ layers), and sparse autoencoding
-- make self.acts a part of the the NeuralNetworkCore [acts in cost/bprop can be optionally set]
+- set_weights to include setting them arbitrarily, and using andrew ng's suggestion for initial weights
 
 Next commit:
 ------------
-- set_weights to include setting them arbitrarily, and using andrew ng's suggestion for initial weights
+- Separate out the bias term (this will take some time/debugging...)
 
 Backlog:
 -------
@@ -14,7 +12,6 @@ Backlog:
 - get momentum, improved momentum, SGD, and other optimization techniques working again
 - add mini-batch_fit to NeuralNetworkCore (part of getting SGD to work)
 - start training a deep network using greedy layer-wise training
-- Separate out the bias term (this will take some time/debugging...)
 - autodiff + theano
 - look into packing/deprecation
 - Apply a sparse autoencoder to london scikits data
