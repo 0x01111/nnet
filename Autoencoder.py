@@ -4,7 +4,6 @@ from scipy.optimize import fmin_cg,fmin_l_bfgs_b
 import nnetutils as nu
 import NeuralNetworkCore
 
-# TODO: add try/except
 class Autoencoder(NeuralNetworkCore.Network):
 	
 	def __init__(self,d=64,k=64,n_hid=25,decay=0.0001,rho=0.01,beta=3,update='L-BFGS'):

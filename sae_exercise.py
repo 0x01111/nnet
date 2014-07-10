@@ -1,7 +1,6 @@
 import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
-import MultiLayerNet as mln
 import Autoencoder as ae
 
 def sample_images(I,w=8,h=8,n=10000):
@@ -101,6 +100,7 @@ if __name__ == '__main__':
 	rho = 0.01
 
 	sae = ae.Autoencoder(d=d,k=k,n_hid=n_hid,decay=decay,beta=beta,rho=rho)
+	sae.set_weights(method='alt_random')
 	sae.fit(X)
 	X_r = sae.transform(X,'reconstruct')
 	X_max = sae.compute_max_activations()
