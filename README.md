@@ -1,13 +1,22 @@
-THe basic pipeline for training a neural net
+Example of training a batch softmax classifier:
 
-def loss_func(y_pred,y_true,[,w=None[,lambda=None[,norm=None[,sparsity=None]]]]):
-	# compute the loss function
-	# if there's weights, 
-	return loss
+X,y = get_data_from_somewhere()
+d = X.shape[0]
+k = y.shape[0]
+hidden_layers = [25,10]
+activ = ['sigmoid','sigmoid','softmax']
+nnet = SoftmaxClassifier(d=d, k=k, n_hid = hidden_layers, activ=activ)
 
-nnet = Network(n_hid,activ,loss_func,**kwargs)
+nnet.fit(X=X,y=y,update='conjugate_gradient')
 
-nnet.fit(X) # nnet.transform(X) for autoencoders
+
+About the "fit" function - different combinations and their expected behaviors:
+                                                                                                                                                                
+Function signature:
+def fit(X=None,y=None,x_data=None,method='L-BFGS',eps=0.35,alpha=0.7)
+
+1) fit(X,y) ==> batch fit with L-BFGS
+2) fit(X,y,method='gradient_descent')
 
 
 

@@ -1,31 +1,34 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import fmin_cg,fmin_l_bfgs_b
 import nnetutils as nu
+import nnetoptim as nopt
 
-class Network:
+class Network(object):
 
-	def __init__(self,d=64,k=2,n_hid=[25],activ=[nu.sigmoid,nu.softmax],
-		cost=None,bprop=None,update='conjugate_gradient'):
+	def __init__(self,d=None,k=None,n_hid=[25],activ=[nu.sigmoid,nu.softmax],
+		cost=None,bprop=None):
 
 		# network parameters
 		self.n_nodes = [d]+n_hid+[k] # number of nodes in each layer
-		self.act = (len(self.n_nodes)-1)*[None]
-		self.activ = activ
-		self.update = update
-		self.cost = cost
-		self.bprop = bprop
+		self.act = (len(self.n_nodes)-1)*[None] # activations for each layer (except input)
+		self.activ = activ # activation functions
+		self.cost = cost # cost function
+		self.bprop = bprop # backpropagation function
+		self.cost_vector = [] # error values for each weight 
 
 	def print_init_settings(self):
 		''' Prints initialization settings '''
 
 	def set_weights(self,method='random',wts=None):
-		'''sets the wts_ of the neural network based on the specified method
+		'''sets the weights of the neural network based on the specified method
 		
 		Parameters:
 		-----------
 		method: sets the weights based on a specified method
-				string
+				string (optional, default = random)
+
+		wts:	custom weights
+				list of numpy ndarrays (optional, default = None)
 
 		Returns:
 		--------
@@ -37,8 +40,7 @@ class Network:
 
 		'''
 
-		if wts == None:
-
+		if not wts:
 			self.wts_ = (len(self.n_nodes)-1)*[None]
 
 			if method=='random':
@@ -52,147 +54,120 @@ class Network:
 		else:
 			self.wts_ = wts
 
+	def fit(self,X=None,y=None,x_data=None,method='L-BFGS',n_iter=1000,eps=0.35,alpha=0.7):
+		'''Fits the weights of the neural network
 
-		# chooses values in the range [-sqrt(6/(d+nhid+1)), sqrt(6/(d+nhid+1))]
-		# v = np.sqrt(6./(d+self.n_hid+1))
-		
-		# self.w_i2h_ = 2.0*v*np.random.rand(d+1,self.n_hid) - v
-		# self.w_h2o_ = 2.0*v*np.random.rand(self.n_hid+1,d) - v
-
-	def _fit(self,X,y):
-		''' Fits the weights of the neural network, given the input-output data
-		
 		Parameters:
 		-----------
-		X:	numpy ndarray, required
-			d x M data matrix, M = # of training instances, d = # of features
-		y:	numpy ndarray, required
-			M x k target array, k = # of classes
-		n_iter:	number of iterations, optional (default = 1000)
-				integer
+		X:	data matrix
+			numpy d x m ndarray, d = # of features, m = # of samples
+		
+		y:	targets (labels)
+			numpy k x m ndarray, k = # of classes, m = # of samples
+
+		x_data:	mini-batch data iterator
+				generator
+
+		methods:	
 
 		Returns:
 		--------
 		None
-
+	
 		Updates:
 		--------
-		wts_: list of ndarray matrices corresponding to the wts_ of the neural network
+		self.wts_	
 		'''
-		m = X.shape[1] # number of instances
 
-		# append ones to account for bias
-		X = np.append(np.ones([1,m]),X,axis=0) 
+		# Run the network through just once to set the activations
+		if not X == None:
+			m = X.shape[1]
+			_X = np.vstack((np.ones([1,m]),X))
+			self.fprop(_X)
 
-		# accum_grad = []
-		# # needed for momentum, improved_momentum
-		# if self.update=='momentum' or self.update=='improved_momentum':
-		# 	for n1,n2 in zip(self.n_nodes[:-1],self.n_nodes[1:]):
-		# 		accum_grad.append(np.zeros([n1+1,n2]))
+		if method == 'conjugate_gradient':
+			self.wts_ = nopt.conjugate_gradient(self.wts_, _X, y, self.n_nodes, self.loss, self.loss_grad)
 
-		self.set_weights(method='alt_random') # assign initial weight values
+		elif method == 'L-BFGS':
+			self.wts_ = nopt.lbfgs(self.wts_, _X, y, self.n_nodes, self.loss, self.loss_grad)
+		
+		elif method == 'gradient_descent':
+			if not X == None and not y == None:
+				self.wts_ = nopt.gradient_descent(self.wts_,self.update,_X,y,n_iter=n_iter,eps=eps)
+			elif x_data:
+				self.wts_ = nopt.gradient_descent(self.wts_,self.update,x_data=x_data,n_iter=n_iter,eps=eps)
 
-		# # needed for adaptive learning
-		# gain = []
-		# last_grad = []
-		# if self.adaptive:
-		# 	# local gain terms
-		# 	for n1,n2 in zip(self.n_nodes[:-1],self.n_nodes[1:]):
-		# 		gain.append(np.ones([n1+1,n2]))
-		# 		# gradient values from previous iteration
-		# 		last_grad.append(np.ones([n1+1,n2]))
-		# else:
-		# 	gain = len(self.wts_)*[1.0]
+		elif method == 'momentum':
+			if not X == None and not y == None:
+				self.wts_ = nopt.momentum(self.wts_,self.update,_X,y,n_iter=n_iter,eps=eps,alpha=alpha)
+			elif x_data:
+				self.wts_ = nopt.momentum(self.wts_,self.update,x_data=x_data,n_iter=n_iter,eps=eps,alpha=alpha)
 
-		# uncomment for gradient checking
-		# grad_vector = np.empty(sum([w.size for w in self.wts_]))
+		elif method == 'improv_momentum':
+			if not _X == None and not y == None:
+				self.wts_ = nopt.improv_momentum(self.wts_,self.update,_X,y,n_iter=n_iter,eps=eps,alpha=alpha)
+			elif x_data:
+				self.wts_ = nopt.improv_momentum(self.wts_,self.update,x_data=x_data,n_iter=n_iter,eps=eps,alpha=alpha)
 
-		# uses the scipy routine for conjugate gradient
-		if self.update == 'conjugate_gradient':
-			w0 = nu.unroll(self.wts_)
-			wf = fmin_cg(self.loss,w0,self.loss_grad,(X,y))
-			wts = nu.reroll(wf,self.n_nodes)
-			self.wts_ = wts
-			
-		elif self.update == 'L-BFGS':
-			# apply the L-BFGS optimization routine and optimize wts_
-			w0 = nu.unroll(self.wts_) # flatten weight matrices to a single vector
-			res = fmin_l_bfgs_b(self.loss,w0,self.loss_grad,(X,y)) # apply lbfgs to find optimal weight vector
-			wts = nu.reroll(res[0],self.n_nodes) # re-roll to weight matrices
-			self.wts_ = wts
-
-		# else:
-		# 	for i in range(n_iter):
-
-		# 		idx = np.random.permutation(m)[:self.batch_size] # mini-batch indices	
-				
-		# 		if self.update=='improved_momentum':
-		# 			# take a step first in the direction of the accumulated gradient
-		# 			self.wts_ = [w+a for w,a in zip(self.wts_,accum_grad)]
-
-		# 		# propagate the data 
-		# 		act = self.fprop(X[:,idx]) # get the activations from forward propagation
-		# 		grad = self.bprop(X[:,idx],y[:,idx],act)
-
-		# 		if self.adaptive:
-		# 			# same sign --> increase learning rate, opposite --> decrease 
-		# 			for i,(d,l,g) in enumerate(zip(grad,last_grad,gain)):
-		# 				sign_grad = d*l
-		# 				np.putmask(g,sign_grad<0,g*0.95)
-		# 				np.putmask(g,sign_grad>0,g+0.05)
-		# 				gain[i] = self.clamp(g,0.1,10)
-
-		# 		# simple gradient-descent
-		# 		if self.update=='default':
-		# 			self.wts_ = [self.wts_[i]-self.learn_rate*g*d for i,(d,g) in enumerate(zip(grad,gain))]
-				
-		# 		# momentum
-		# 		elif self.update=='momentum':
-		# 			for i,(d,g) in enumerate(zip(grad,gain)):
-		# 				accum_grad[i] = self.alpha*accum_grad[i] + d
-		# 				self.wts_[i] -= self.learn_rate*g*accum_grad[i]
-				
-		# 		# improved momentum
-		# 		elif self.update=='improved_momentum':
-		# 			for i,(d,g) in enumerate(zip(grad,gain)):
-		# 				self.wts_[i] -= self.learn_rate*g*d
-		# 				accum_grad[i] = self.alpha*(accum_grad[i] - self.learn_rate*g*d)
-			
 		return self
-
-	def mini_batch_fit(X,y):
-		'''Runs a single iteration of fprop/bprop on a mini-batch (for online training, X will only be one training example) 
-		
-		Parameters:
-		-----------
-		
-		Returns:
-		--------
-		
-		'''
-
-	def fprop(self,X,wts=None):
+	
+	def fprop(self,_X,wts=None):
 		'''Performs general forward propagation and stores intermediate activation values'''
-		if wts==None:
+		
+		if not wts:
 			wts = self.wts_
 
-		m = X.shape[1] # number of training cases
-		self.act[0] = np.vstack((np.ones([1,m]),self.activ[0](np.dot(wts[0].T,X)))) # use the first data matrix to compute the first activation
+		m = _X.shape[1] # number of training cases
+		self.act[0] = np.vstack((np.ones([1,m]),self.activ[0](np.dot(wts[0].T,_X)))) # use the first data matrix to compute the first activation
 		for i,w in enumerate(wts[1:-1]):
 			self.act[i+1] = np.vstack((np.ones([1,m]),self.activ[i+1](np.dot(w.T,self.act[i])))) # sigmoid activations
 		self.act[-1] = self.activ[-1](np.dot(wts[-1].T,self.act[-2]))
 
-	def loss(self,w,X,y):
+	# the following methods are so-called 'conveninence' functions needed for various optimization methods that are called
+	# by the fit method 
+	
+	def loss(self,w,_X,y):
 		''' convenience loss function for batch optimization methods, e.g.,
 		fmin_cg, fmin_l_bfgs_b '''
 
 		wts = nu.reroll(w,self.n_nodes)
-		self.fprop(X,wts)
-		return self.cost(y,wts=wts)
+		self.fprop(_X,wts)
 
-	def loss_grad(self,w,X,y):
-		''' convenience grad function for batch optimization methods, e.g.,
+		# needed to plot error as a function of the iteration
+		error = self.cost(y,wts)
+		self.cost_vector.append(error)
+		
+		return self.cost(y,wts)
+
+	def loss_grad(self,w,_X,y):
+		''' convenience grad function for batch optimization methods, e.g., 
 		fmin_cg, fmin_l_bfgs_b '''
+		
 		wts = nu.reroll(w,self.n_nodes)
-		grad = self.bprop(X,y,wts=wts)
+		grad = self.bprop(_X,y,wts)
 		return nu.unroll(grad)
+
+	def update(self,_X,y,wts=None):
+		''' convenience function for mini-batch optimization methods, e.g., 
+		gradient_descent, momentum, improved_momentum'''
+		
+		if not wts:
+			wts = self.wts_
+		
+		self.fprop(_X,wts)
+
+		# needed to plot error as a function of the iteration
+		error = self.cost(y,wts)
+		self.cost_vector.append(error)
+		return self.bprop(_X,y,wts)
+
+	# Plotting function
+	def plot_error_curve(self):
+		'''Plots the error at each iteration'''
+		    
+		plt.figure()
+		iter_idx = range(len(self.cost_vector))
+		plt.plot(iter_idx,self.cost_vector)
+		plt.title('Error Curve')
+		plt.xlabel('Iter #')
+		plt.ylabel('Error')

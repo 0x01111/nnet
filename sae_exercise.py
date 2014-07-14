@@ -61,17 +61,15 @@ def load_images(mat_file):
 
 def visualize_image_bases(X_max,n_hid,w=8,h=8):
 	plt.figure()
-	
 	for i in range(n_hid):
 		plt.subplot(5,5,i)
 		curr_img = X_max[:,i].reshape(w,h)
 		plt.imshow(curr_img,cmap='gray',interpolation='none')
 
-	plt.show()
-
 def show_reconstruction(X,X_r,idx,w=8,h=8):
+	
 	''' Plots a single patch before and after reconstruction '''
-
+	
 	plt.figure()
 	xo = X[:,idx].reshape(w,h)
 	xr = X_r[:,idx].reshape(w,h)
@@ -81,7 +79,6 @@ def show_reconstruction(X,X_r,idx,w=8,h=8):
 	plt.subplot(212)
 	plt.imshow(xr,cmap='gray',interpolation='none')
 	plt.title('Reconstructed patch')
-	plt.show()
 
 if __name__ == '__main__':
 	
@@ -93,20 +90,21 @@ if __name__ == '__main__':
 	print 'Applying a sparse autoencoder to the data'
 
 	d = X.shape[0] # input dimension
-	k = d # output dimension
 	n_hid = 25 # number of hidden nodes
 	decay = 0.0001
 	beta = 3
 	rho = 0.01
 
-	sae = ae.Autoencoder(d=d,k=k,n_hid=n_hid,decay=decay,beta=beta,rho=rho)
+	sae = ae.Autoencoder(d=d,n_hid=n_hid,decay=decay,beta=beta,rho=rho)
 	sae.set_weights(method='alt_random')
-	sae.fit(X)
+	sae.fit(X,method='conjugate_gradient')
 	X_r = sae.transform(X,'reconstruct')
 	X_max = sae.compute_max_activations()
 
-	print 'Displaying maximum activations for hidden nodes'
+	print 'Displaying maximum activations for hidden nodes and error curves'
 	np.savez('image_bases',X_max=X_max)
 	files = np.load('image_bases.npz')
 	X_max = files['X_max']
 	visualize_image_bases(X_max, n_hid)
+	sae.plot_error_curve()
+	plt.show()

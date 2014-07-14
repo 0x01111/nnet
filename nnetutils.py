@@ -1,5 +1,15 @@
 import numpy as np
 
+def data_generator(X,y,batch_size=None,n_iter=1000):
+	'''Takes a data matrix, permutes the samples, and returns the first batch_size samples '''
+	
+	if not batch_size:
+		batch_size = X.shape[1]
+	
+	while True:
+		idx = np.random.permutation(batch_size)[:batch_size]
+		yield X[:,idx],y[:,idx]
+	    
 def softmax(z):
 	''' Computes the softmax of the outputs in a numerically stable manner'''
 		

@@ -1,19 +1,16 @@
 This commit:
 ------------
-- set_weights to include setting them arbitrarily, and using andrew ng's suggestion for initial weights
-
-Next commit:
-------------
-- Separate out the bias term (this will take some time/debugging...)
+- implement gradient_descent, momentum, and improved momentum, and a function in NeuralNetCore which can plot the error curves 
 
 Backlog:
 -------
-- start working on other parts of the deep learning tutorial
-- get momentum, improved momentum, SGD, and other optimization techniques working again
-- add mini-batch_fit to NeuralNetworkCore (part of getting SGD to work)
+- start working through additional sections of Andrew Ng's code and 
 - start training a deep network using greedy layer-wise training
 - autodiff + theano
 - look into packing/deprecation
 - Apply a sparse autoencoder to london scikits data
+- start profiling code
 
-
+Notes:
+-------
+- All the optimization techniques assume X to be pre-appended with a row of ones at the top - should I just switch permanently to W,b, or keep this 'joint' data matrix? 
