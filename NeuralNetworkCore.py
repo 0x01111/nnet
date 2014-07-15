@@ -54,7 +54,7 @@ class Network(object):
 		else:
 			self.wts_ = wts
 
-	def fit(self,X=None,y=None,x_data=None,method='L-BFGS',n_iter=1000,eps=0.35,alpha=0.7):
+	def fit(self,X=None,y=None,x_data=None,method='L-BFGS',n_iter=1500,eps=0.75,alpha=0.9):
 		'''Fits the weights of the neural network
 
 		Parameters:
@@ -87,7 +87,7 @@ class Network(object):
 
 		if method == 'conjugate_gradient':
 			self.wts_ = nopt.conjugate_gradient(self.wts_, _X, y, self.n_nodes, self.loss, self.loss_grad)
-
+		
 		elif method == 'L-BFGS':
 			self.wts_ = nopt.lbfgs(self.wts_, _X, y, self.n_nodes, self.loss, self.loss_grad)
 		
@@ -100,14 +100,15 @@ class Network(object):
 		elif method == 'momentum':
 			if not X == None and not y == None:
 				self.wts_ = nopt.momentum(self.wts_,self.update,_X,y,n_iter=n_iter,eps=eps,alpha=alpha)
+			
 			elif x_data:
 				self.wts_ = nopt.momentum(self.wts_,self.update,x_data=x_data,n_iter=n_iter,eps=eps,alpha=alpha)
 
-		elif method == 'improv_momentum':
+		elif method == 'improved_momentum':
 			if not _X == None and not y == None:
-				self.wts_ = nopt.improv_momentum(self.wts_,self.update,_X,y,n_iter=n_iter,eps=eps,alpha=alpha)
+				self.wts_ = nopt.improved_momentum(self.wts_,self.update,_X,y,n_iter=n_iter,eps=eps,alpha=alpha)	
 			elif x_data:
-				self.wts_ = nopt.improv_momentum(self.wts_,self.update,x_data=x_data,n_iter=n_iter,eps=eps,alpha=alpha)
+				self.wts_ = nopt.improved_momentum(self.wts_,self.update,x_data=x_data,n_iter=n_iter,eps=eps,alpha=alpha)
 
 		return self
 	
@@ -167,6 +168,7 @@ class Network(object):
 		    
 		plt.figure()
 		iter_idx = range(len(self.cost_vector))
+		print 'Final Error: ',self.cost_vector[-1]
 		plt.plot(iter_idx,self.cost_vector)
 		plt.title('Error Curve')
 		plt.xlabel('Iter #')

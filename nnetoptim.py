@@ -95,7 +95,7 @@ def improved_momentum(wts, update, _X=None, y=None,x_data=None,n_iter=1000,eps=0
 		for i in range(n_iter):
 
 			# take a step in the direction of the accumulated gradient first
-			wts = [w + a in zip(wts,accum_grad_wts)] 
+			wts = [w + a for w,a in zip(wts,accum_grad_wts)] 
 			grad_wts = update(_X,y,wts) # evaluate the gradient at this new point
 			
 			for w,g,a in zip(wts,grad_wts,accum_grad_wts):
@@ -112,7 +112,7 @@ def improved_momentum(wts, update, _X=None, y=None,x_data=None,n_iter=1000,eps=0
 		_X,y = x_data.next() 
 
 		# take a step in the direction of the accumulated gradient first
-		wts = [w + a in zip(wts,accum_grad_wts)] 
+		wts = [w + a for w,a in zip(wts,accum_grad_wts)] 
 		grad_wts = update(_X,y,wts) # evaluate the gradient at this new point
 		
 		for w,g,a in zip(wts,grad_wts,accum_grad_wts):
@@ -122,7 +122,7 @@ def improved_momentum(wts, update, _X=None, y=None,x_data=None,n_iter=1000,eps=0
 		
 	return wts
 
-def momentum(wts, update, _X=None, y=None,x_data=None,n_iter=1000,eps=0.35,alpha=0.9):
+def momentum(wts, update, _X=None, y=None,x_data=None,n_iter=1000,eps=0.5,alpha=0.9):
 	''' Original momentum method
 	
 	Parameters:
