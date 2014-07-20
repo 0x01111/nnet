@@ -59,11 +59,12 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		return dE_dW[::-1]
 
 	def predict(self,X,y=None):
-		'''One-line description
+		'''Runs forward propagation through the network to predict labels, and computes 
+		the misclassification rate if true labels are provided
 		
 		Parameters:
 		-----------
-		X:
+		X: data matrix 
 		y:
 		
 		Returns:
@@ -72,12 +73,11 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		mce:
 		'''
 		m = X.shape[1]
-		X = np.append(np.ones([1,m]),X,axis=0)
-		self.fprop(X)
+		_X = np.append(np.ones([1,m]),X,axis=0)
+		self.fprop(_X)
 		pred = np.argmax(self.act[-1],axis=0) # only the final activation contains the 
 		
-		if not y:
+		if y==None:
 			return pred
-		mce = 1.0-np.mean(1.0*(pred==np.argmax(y,axis=0)))
-		
+		mce = 1.0-np.mean(1.0*(pred==np.argmax(y,axis=0)))		
 		return pred,mce

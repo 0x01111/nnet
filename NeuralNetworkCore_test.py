@@ -67,7 +67,8 @@ class testNeuralNetworkCore(unittest.TestCase):
 		''' Gradient checking of backprop for single hidden-layer softmax '''
 
 		n_hid = [50]
-		nnet = scl.SoftmaxClassifier(d=self.d,k=self.k,n_hid=n_hid)
+		decay = 0.0
+		nnet = scl.SoftmaxClassifier(d=self.d,k=self.k,n_hid=n_hid,decay=decay)
 
 		# initialize weights deterministically
 		n_nodes = [self.d]+n_hid+[self.k] # concatenate the input and output layers

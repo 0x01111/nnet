@@ -50,11 +50,11 @@ class Network(object):
 			elif method=='alt_random':
 				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
 					v = np.sqrt(6./(n1+n2+1))
-					self.wts_[i] = 2.0*v*np.random.rand(n1+1,n2) - v
+					self.wts_[i] = 2.0*v*np.random.rand(n1+1,n2) - v			
 		else:
 			self.wts_ = wts
 
-	def fit(self,X=None,y=None,x_data=None,method='L-BFGS',n_iter=1500,eps=0.75,alpha=0.9):
+	def fit(self,X=None,y=None,x_data=None,method='L-BFGS',n_iter=1500,learn_rate=0.75,alpha=0.9):
 		'''Fits the weights of the neural network
 
 		Parameters:
@@ -93,22 +93,22 @@ class Network(object):
 		
 		elif method == 'gradient_descent':
 			if not X == None and not y == None:
-				self.wts_ = nopt.gradient_descent(self.wts_,self.update,_X,y,n_iter=n_iter,eps=eps)
+				self.wts_ = nopt.gradient_descent(self.wts_,self.update,_X,y,n_iter=n_iter,learn_rate=learn_rate)
 			elif x_data:
-				self.wts_ = nopt.gradient_descent(self.wts_,self.update,x_data=x_data,n_iter=n_iter,eps=eps)
+				self.wts_ = nopt.gradient_descent(self.wts_,self.update,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate)
 
 		elif method == 'momentum':
 			if not X == None and not y == None:
-				self.wts_ = nopt.momentum(self.wts_,self.update,_X,y,n_iter=n_iter,eps=eps,alpha=alpha)
+				self.wts_ = nopt.momentum(self.wts_,self.update,_X,y,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 			
 			elif x_data:
-				self.wts_ = nopt.momentum(self.wts_,self.update,x_data=x_data,n_iter=n_iter,eps=eps,alpha=alpha)
+				self.wts_ = nopt.momentum(self.wts_,self.update,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 
 		elif method == 'improved_momentum':
 			if not _X == None and not y == None:
-				self.wts_ = nopt.improved_momentum(self.wts_,self.update,_X,y,n_iter=n_iter,eps=eps,alpha=alpha)	
+				self.wts_ = nopt.improved_momentum(self.wts_,self.update,_X,y,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)	
 			elif x_data:
-				self.wts_ = nopt.improved_momentum(self.wts_,self.update,x_data=x_data,n_iter=n_iter,eps=eps,alpha=alpha)
+				self.wts_ = nopt.improved_momentum(self.wts_,self.update,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 
 		return self
 	
