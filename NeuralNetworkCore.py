@@ -14,7 +14,7 @@ class Network(object):
 		self.activ = activ # activation functions
 		self.cost = cost # cost function
 		self.bprop = bprop # backpropagation function
-		self.cost_vector = [] # error values for each weight 
+		# self.cost_vector = [] # error values for each weight 
 
 	def print_init_settings(self):
 		''' Prints initialization settings '''
@@ -45,16 +45,23 @@ class Network(object):
 
 			if method=='random':
 				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
-					self.wts_[i] = 0.5*np.random.rand(n1+1,n2)
+					self.wts_[i] = 0.1*np.random.rand(n1+1,n2)
 
 			elif method=='alt_random':
 				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
 					v = np.sqrt(6./(n1+n2+1))
-					self.wts_[i] = 2.0*v*np.random.rand(n1+1,n2) - v			
+					self.wts_[i] = 2.0*v*np.random.rand(n1+1,n2) - v
+			
+			elif method=='fixed':
+				last_size=0
+				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
+					curr_size = (n1+1)*n2
+					self.wts_[i] = (0.1*np.cos(np.arange(curr_size)+last_size)).reshape((n1+1,n2))
+					last_size = curr_size
 		else:
 			self.wts_ = wts
 
-	def fit(self,X=None,y=None,x_data=None,method='L-BFGS',n_iter=1500,learn_rate=0.75,alpha=0.9):
+	def fit(self,X=None,y=None,x_data=None,method='L-BFGS',n_iter=1000,learn_rate=0.75,alpha=0.9):
 		'''Fits the weights of the neural network
 
 		Parameters:
@@ -78,35 +85,33 @@ class Network(object):
 		--------
 		self.wts_	
 		'''
-
-		# Run the network through just once to set the activations
 		if not X == None:
 			m = X.shape[1]
-			_X = np.vstack((np.ones([1,m]),X))
-			self.fprop(_X)
+			X = np.vstack((np.ones([1,m]),X))
 
 		if method == 'conjugate_gradient':
-			self.wts_ = nopt.conjugate_gradient(self.wts_, _X, y, self.n_nodes, self.loss, self.loss_grad)
+			self.fprop(X)
+			self.wts_ = nopt.conjugate_gradient(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad)
 		
 		elif method == 'L-BFGS':
-			self.wts_ = nopt.lbfgs(self.wts_, _X, y, self.n_nodes, self.loss, self.loss_grad)
+			self.wts_ = nopt.lbfgs(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad)
 		
 		elif method == 'gradient_descent':
 			if not X == None and not y == None:
-				self.wts_ = nopt.gradient_descent(self.wts_,self.update,_X,y,n_iter=n_iter,learn_rate=learn_rate)
+				self.wts_ = nopt.gradient_descent(self.wts_,self.update,X,y,n_iter=n_iter,learn_rate=learn_rate)
 			elif x_data:
 				self.wts_ = nopt.gradient_descent(self.wts_,self.update,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate)
 
 		elif method == 'momentum':
 			if not X == None and not y == None:
-				self.wts_ = nopt.momentum(self.wts_,self.update,_X,y,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
+				self.wts_ = nopt.momentum(self.wts_,self.update,X,y,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 			
 			elif x_data:
 				self.wts_ = nopt.momentum(self.wts_,self.update,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 
 		elif method == 'improved_momentum':
-			if not _X == None and not y == None:
-				self.wts_ = nopt.improved_momentum(self.wts_,self.update,_X,y,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)	
+			if not X == None and not y == None:
+				self.wts_ = nopt.improved_momentum(self.wts_,self.update,X,y,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)	
 			elif x_data:
 				self.wts_ = nopt.improved_momentum(self.wts_,self.update,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 
@@ -133,11 +138,6 @@ class Network(object):
 
 		wts = nu.reroll(w,self.n_nodes)
 		self.fprop(_X,wts)
-
-		# needed to plot error as a function of the iteration
-		error = self.cost(y,wts)
-		self.cost_vector.append(error)
-		
 		return self.cost(y,wts)
 
 	def loss_grad(self,w,_X,y):
@@ -154,22 +154,18 @@ class Network(object):
 		
 		if not wts:
 			wts = self.wts_
-		
 		self.fprop(_X,wts)
 
-		# needed to plot error as a function of the iteration
-		error = self.cost(y,wts)
-		self.cost_vector.append(error)
 		return self.bprop(_X,y,wts)
 
 	# Plotting function
-	def plot_error_curve(self):
-		'''Plots the error at each iteration'''
+	# def plot_error_curve(self):
+	# 	'''Plots the error at each iteration'''
 		    
-		plt.figure()
-		iter_idx = range(len(self.cost_vector))
-		print 'Final Error: ',self.cost_vector[-1]
-		plt.plot(iter_idx,self.cost_vector)
-		plt.title('Error Curve')
-		plt.xlabel('Iter #')
-		plt.ylabel('Error')
+	# 	plt.figure()
+	# 	iter_idx = range(len(self.cost_vector))
+	# 	print 'Final Error: ',self.cost_vector[-1]
+	# 	plt.plot(iter_idx,self.cost_vector)
+	# 	plt.title('Error Curve')
+	# 	plt.xlabel('Iter #')
+	# 	plt.ylabel('Error')

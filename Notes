@@ -1,16 +1,18 @@
 This commit:
 ------------
-- implement gradient_descent, momentum, and improved momentum, and a function in NeuralNetCore which can plot the error curves 
+- implement gradient_descent, momentum, and improved momentum, and run code on hinton's MNIST set
 
 Backlog:
 -------
-- start working through additional sections of Andrew Ng's code and 
+- start working through additional sections of Andrew Ng's code
 - start training a deep network using greedy layer-wise training
 - autodiff + theano
 - look into packing/deprecation
 - Apply a sparse autoencoder to london scikits data
 - start profiling code
+- add in more stuff from hinton's class
+- 
 
 Notes:
 -------
-- All the optimization techniques assume X to be pre-appended with a row of ones at the top - should I just switch permanently to W,b, or keep this 'joint' data matrix? 
+- All the optimization techniques assume X to be pre-appended with a row of ones at the top - should I just switch permanently to W,b, or keep this 'extended' data matrix style? I think it makes sense to take it out at some point, will worry about it later 

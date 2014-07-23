@@ -18,7 +18,7 @@ def lbfgs(wts,_X,y,n_nodes,loss,loss_grad):
 	res = fmin_l_bfgs_b(loss,w0,loss_grad,(_X,y))
 	return nu.reroll(res[0],n_nodes)
 
-def gradient_descent(wts, update, _X=None, y=None,x_data=None,n_iter=1000,learn_rate=0.35):
+def gradient_descent(wts,update,_X=None, y=None,x_data=None,n_iter=1000,learn_rate=0.35):
 	'''Simple, stochastic gradient descent
 	
 	Parameters:
@@ -54,10 +54,12 @@ def gradient_descent(wts, update, _X=None, y=None,x_data=None,n_iter=1000,learn_
 		
 	# mini-batch stochastic gradient descent
 	for i in range(n_iter):
-		_X,y = x_data.next() # get the next batch of data
-		grad_wts = update(_X,y,wts) # run the samples through the network
+		X,y = x_data.next() # get the next batch of data
+		m = X.shape[1]
+		X = np.vstack((np.ones([1,m]),X))
+		grad_wts = update(X,y,wts) # run the samples through the network
 		wts = [w-learn_rate*g for w,g in zip(wts,grad_wts)] # update the weights
-
+		
 	return wts
 
 def improved_momentum(wts, update, _X=None, y=None,x_data=None,n_iter=1000,learn_rate=0.35,alpha=0.9):
@@ -109,11 +111,13 @@ def improved_momentum(wts, update, _X=None, y=None,x_data=None,n_iter=1000,learn
 	for i in range(n_iter):
 		
 		# get the next batch of data
-		_X,y = x_data.next() 
+		X,y = x_data.next()
+		m = X.shape[1]
+		X = np.vstack((np.ones([1,m]),X))
 
 		# take a step in the direction of the accumulated gradient first
 		wts = [w + a for w,a in zip(wts,accum_grad_wts)] 
-		grad_wts = update(_X,y,wts) # evaluate the gradient at this new point
+		grad_wts = update(X,y,wts) # evaluate the gradient at this new point
 		
 		for w,g,a in zip(wts,grad_wts,accum_grad_wts):
 			step = learn_rate*g
@@ -122,7 +126,7 @@ def improved_momentum(wts, update, _X=None, y=None,x_data=None,n_iter=1000,learn
 		
 	return wts
 
-def momentum(wts, update, _X=None, y=None,x_data=None,n_iter=1000,learn_rate=0.5,alpha=0.9):
+def momentum(wts,update,_X=None, y=None,x_data=None,n_iter=1000,learn_rate=0.5,alpha=0.9):
 	''' Original momentum method
 	
 	Parameters:
@@ -168,9 +172,10 @@ def momentum(wts, update, _X=None, y=None,x_data=None,n_iter=1000,learn_rate=0.5
 	for i in range(n_iter):
 		
 		# get the next batch of data
-		_X,y = x_data.next() 
-
-		grad_wts = update(_X,y,wts) # evaluate the gradient at the current point
+		X,y = x_data.next() 
+		m = X.shape[1]
+		X = np.vstack((np.ones([1,m]),X))
+		grad_wts = update(X,y,wts) # evaluate the gradient at the current point
 
 		for i,(w,a,g) in enumerate(zip(wts,accum_grad_wts,grad_wts)):
 			a = alpha*a + g # add the attenuated accumulated gradient to the current gradient

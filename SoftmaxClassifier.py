@@ -73,8 +73,8 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		mce:
 		'''
 		m = X.shape[1]
-		_X = np.append(np.ones([1,m]),X,axis=0)
-		self.fprop(_X)
+		X = np.append(np.ones([1,m]),X,axis=0)
+		self.fprop(X)
 		pred = np.argmax(self.act[-1],axis=0) # only the final activation contains the 
 		
 		if y==None:
