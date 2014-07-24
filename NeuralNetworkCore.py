@@ -5,8 +5,7 @@ import nnetoptim as nopt
 
 class Network(object):
 
-	def __init__(self,d=None,k=None,n_hid=[25],activ=[nu.sigmoid,nu.softmax],
-		cost=None,bprop=None):
+	def __init__(self,d=None,k=None,n_hid=None,activ=None,cost=None,bprop=None):
 
 		# network parameters
 		self.n_nodes = [d]+n_hid+[k] # number of nodes in each layer
@@ -45,7 +44,7 @@ class Network(object):
 
 			if method=='random':
 				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
-					self.wts_[i] = 0.1*np.random.rand(n1+1,n2)
+					self.wts_[i] = 0.5*np.random.rand(n1+1,n2)
 
 			elif method=='alt_random':
 				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
@@ -124,10 +123,12 @@ class Network(object):
 			wts = self.wts_
 
 		m = _X.shape[1] # number of training cases
-		self.act[0] = np.vstack((np.ones([1,m]),self.activ[0](np.dot(wts[0].T,_X)))) # use the first data matrix to compute the first activation
-		for i,w in enumerate(wts[1:-1]):
-			self.act[i+1] = np.vstack((np.ones([1,m]),self.activ[i+1](np.dot(w.T,self.act[i])))) # sigmoid activations
-		self.act[-1] = self.activ[-1](np.dot(wts[-1].T,self.act[-2]))
+		self.act[0] = self.activ[0](np.dot(wts[0].T,_X)) # use the first data matrix to compute the first activation
+		if len(wts) > 1: # wts = 1 refers to softmax regression
+			self.act[0] = np.vstack(np.ones([1,m]),self.act[0])
+			for i,w in enumerate(wts[1:-1]):
+				self.act[i+1] = np.vstack((np.ones([1,m]),self.activ[i+1](np.dot(w.T,self.act[i])))) # sigmoid activations
+			self.act[-1] = self.activ[-1](np.dot(wts[-1].T,self.act[-2]))
 
 	# the following methods are so-called 'conveninence' functions needed for various optimization methods that are called
 	# by the fit method 

@@ -16,3 +16,4 @@ Backlog:
 Notes:
 -------
 - All the optimization techniques assume X to be pre-appended with a row of ones at the top - should I just switch permanently to W,b, or keep this 'extended' data matrix style? I think it makes sense to take it out at some point, will worry about it later 
+- Consider having separate bprop/fprop for softmax regression 

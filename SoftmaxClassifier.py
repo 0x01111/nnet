@@ -48,10 +48,11 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		# the inputs to the softmax first
 		dE_dz = act[0]-y
 		
-		for i,a in enumerate(act[1:]):
-			dE_dW.append(1.0/m*np.dot(a,dE_dz.T) + self.decay*wts[i])
-			dE_da = np.dot(wts[i],dE_dz)
-			dE_dz = (dE_da*a*(1-a))[1:] # no connection to the bias node
+		if len(wts)>1: # wts = 1 means there's no hidden layer
+			for i,a in enumerate(act[1:]):
+				dE_dW.append(1.0/m*np.dot(a,dE_dz.T) + self.decay*wts[i])
+				dE_da = np.dot(wts[i],dE_dz)
+				dE_dz = (dE_da*a*(1-a))[1:] # no connection to the bias node
 		
 		dE_dW.append(1.0/m*np.dot(_X,dE_dz.T) + self.decay*wts[-1])
 
