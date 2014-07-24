@@ -44,7 +44,7 @@ class Network(object):
 
 			if method=='random':
 				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
-					self.wts_[i] = 0.5*np.random.rand(n1+1,n2)
+					self.wts_[i] = 0.001*np.random.rand(n1+1,n2)
 
 			elif method=='alt_random':
 				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
