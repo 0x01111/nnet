@@ -38,7 +38,7 @@ class testNeuralNetworkCore(unittest.TestCase):
 		# Numerical computation of the gradient..but checking every single derivative is 
 		# cumbersome, check 20% of the values
 		n = sum(np.size(w) for w in nnet.wts_)
- 		idx = np.random.permutation(n)[:(n/20)] # choose a random 20% 
+ 		idx = np.random.permutation(n)[:(n/5)] # choose a random 20% 
  		ngrad = [None]*len(idx)
 
 		for i,x in enumerate(idx):
@@ -65,7 +65,6 @@ class testNeuralNetworkCore(unittest.TestCase):
 
 	def test_SoftmaxClassifier_single_layer(self):
 		''' Gradient checking of backprop for single hidden-layer softmax '''
-
 		n_hid = [50]
 		decay = 0.0
 		nnet = scl.SoftmaxClassifier(d=self.d,k=self.k,n_hid=n_hid,decay=decay)
@@ -87,7 +86,7 @@ class testNeuralNetworkCore(unittest.TestCase):
 		# Numerical computation of the gradient..but checking every single derivative is 
 		# cumbersome, check 20% of the values
 		n = sum(np.size(w) for w in nnet.wts_)
- 		idx = np.random.permutation(n)[:(n/20)] # choose a random 20% 
+ 		idx = np.random.permutation(n)[:(n/5)] # choose a random 20% 
  		ngrad = [None]*len(idx)
 
 		for i,x in enumerate(idx):
@@ -135,7 +134,7 @@ class testNeuralNetworkCore(unittest.TestCase):
 		# Numerical computation of the gradient..but checking every single derivative is 
 		# cumbersome, check 20% of the values
 		n = sum(np.size(w) for w in nnet.wts_)
- 		idx = np.random.permutation(n)[:(n/20)] # choose a random 20% 
+ 		idx = np.random.permutation(n)[:(n/5)] # choose a random 20% 
  		ngrad = [None]*len(idx)
 
 		for i,x in enumerate(idx):

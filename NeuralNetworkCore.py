@@ -44,7 +44,7 @@ class Network(object):
 
 			if method=='random':
 				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
-					self.wts_[i] = 0.001*np.random.rand(n1+1,n2)
+					self.wts_[i] = 0.005*np.random.rand(n1+1,n2)
 
 			elif method=='alt_random':
 				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
@@ -90,10 +90,10 @@ class Network(object):
 
 		if method == 'conjugate_gradient':
 			self.fprop(X)
-			self.wts_ = nopt.conjugate_gradient(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad)
+			self.wts_ = nopt.conjugate_gradient(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad,n_iter)
 		
 		elif method == 'L-BFGS':
-			self.wts_ = nopt.lbfgs(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad)
+			self.wts_ = nopt.lbfgs(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad,n_iter)
 		
 		elif method == 'gradient_descent':
 			if not X == None and not y == None:
@@ -125,7 +125,7 @@ class Network(object):
 		m = _X.shape[1] # number of training cases
 		self.act[0] = self.activ[0](np.dot(wts[0].T,_X)) # use the first data matrix to compute the first activation
 		if len(wts) > 1: # wts = 1 refers to softmax regression
-			self.act[0] = np.vstack(np.ones([1,m]),self.act[0])
+			self.act[0] = np.vstack((np.ones([1,m]),self.act[0]))
 			for i,w in enumerate(wts[1:-1]):
 				self.act[i+1] = np.vstack((np.ones([1,m]),self.activ[i+1](np.dot(w.T,self.act[i])))) # sigmoid activations
 			self.act[-1] = self.activ[-1](np.dot(wts[-1].T,self.act[-2]))
@@ -139,7 +139,8 @@ class Network(object):
 
 		wts = nu.reroll(w,self.n_nodes)
 		self.fprop(_X,wts)
-		return self.cost(y,wts)
+		E = self.cost(y,wts)
+		return E
 
 	def loss_grad(self,w,_X,y):
 		''' convenience grad function for batch optimization methods, e.g., 
@@ -147,7 +148,8 @@ class Network(object):
 		
 		wts = nu.reroll(w,self.n_nodes)
 		grad = self.bprop(_X,y,wts)
-		return nu.unroll(grad)
+		dE = nu.unroll(grad)
+		return dE
 
 	def update(self,_X,y,wts=None):
 		''' convenience function for mini-batch optimization methods, e.g., 
