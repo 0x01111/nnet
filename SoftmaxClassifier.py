@@ -9,7 +9,7 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 	def __init__(self,d=None,k=None,n_hid=[25],decay=0.0001):
 		
 		# softmax classifier has sigmoid activations for the intermediate
-		# layers, and a final softmax layer
+		# layers, and a final softmacbx layer
 		activ = len(n_hid)*[nu.sigmoid]
 		activ.append(nu.softmax)
 		
@@ -65,13 +65,17 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		
 		Parameters:
 		-----------
-		X: data matrix 
-		y:
+		X: data matrix
+		   numpy array, d x m
+		y: labels, if available
+		   numpy array, k x m
 		
 		Returns:
 		--------
-		pred:
-		mce:
+		pred: predictions
+			  numpy array, k x m
+		mce: misclassification error, if labels were provided
+			 float
 		'''
 		m = X.shape[1]
 		X = np.append(np.ones([1,m]),X,axis=0)

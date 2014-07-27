@@ -60,7 +60,7 @@ class Network(object):
 		else:
 			self.wts_ = wts
 
-	def fit(self,X=None,y=None,x_data=None,method='L-BFGS',n_iter=1000,learn_rate=0.75,alpha=0.9):
+	def fit(self,X=None,y=None,x_data=None,method='L-BFGS',n_iter=None,learn_rate=0.75,alpha=0.9):
 		'''Fits the weights of the neural network
 
 		Parameters:

@@ -1,19 +1,17 @@
 This commit:
 ------------
-- implement gradient_descent, momentum, and improved momentum, and run code on hinton's MNIST set
+- "Self-taught learning" - using features learned via the sparse autoencoder
 
-Backlog:
--------
-- start working through additional sections of Andrew Ng's code
-- start training a deep network using greedy layer-wise training
+Backlog (major items):
+----------------------
+- have a default weight initialization
 - autodiff + theano
 - look into packing/deprecation
-- Apply a sparse autoencoder to london scikits data
 - start profiling code
-- add in more stuff from hinton's class
-- 
+- clean up the directory structure
+- unit tests for demos and other functions, including gradient descent
 
-Notes:
--------
-- All the optimization techniques assume X to be pre-appended with a row of ones at the top - should I just switch permanently to W,b, or keep this 'extended' data matrix style? I think it makes sense to take it out at some point, will worry about it later 
-- Consider having separate bprop/fprop for softmax regression 
+Notes/Thoughts/Concerns:
+------------------------
+- All the optimization techniques assume X to be pre-appended with a row of ones at the top - should I just switch permanently to W,b, or keep this 'extended' data matrix style? 
+- Currently have the data matrix as d x m, whereas most conventions use m x d - I should probably switch this at some point, but I think this will be a significant effort

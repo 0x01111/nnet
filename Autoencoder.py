@@ -9,11 +9,8 @@ class Autoencoder(NeuralNetworkCore.Network):
 	def __init__(self,d=None,n_hid=25,decay=0.0001,rho=0.01,beta=3):
 	
 		# set the parameters of the superclass
-		# NeuralNetworkCore.Network.__init__(self,d=d,k=k,n_hid=[n_hid],activ=[nu.sigmoid,nu.sigmoid],
-		# 	cost=self.cost, bprop=self.bprop)
 		super(Autoencoder,self).__init__(d=d,k=d,n_hid=[n_hid],activ=[nu.sigmoid,nu.sigmoid],
 			cost=self.cost, bprop=self.bprop)
-
 
 		# set hyperparameters
 		self.decay = decay # regularization coefficient
@@ -52,11 +49,11 @@ class Autoencoder(NeuralNetworkCore.Network):
 		
 		return dE_dW[::-1]
 
-	def fit(self,X=None,x_data=None,method='L-BFGS',n_iter=1000,eps=0.5,alpha=0.9):
+	def fit(self,X=None,x_data=None,method='L-BFGS',n_iter=None,learn_rate=0.5,alpha=0.9):
 		''' See NeuralNetworkCore,Network.fit for a description of fit. 
 		This function simply calls the super-class version but with y = X'''
 
-		return super(Autoencoder,self).fit(X=X,y=X,x_data=x_data,method=method,n_iter=n_iter,eps=eps,alpha=alpha)
+		return super(Autoencoder,self).fit(X=X,y=X,x_data=x_data,method=method,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 
 	def transform(self,X,option='reduce'):
 		'''Either transforms the input data or reconstructs it, based on the option
