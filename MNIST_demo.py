@@ -3,10 +3,10 @@ import numpy as np
 import SoftmaxClassifier as scl
 
 # define the paths
-train_img_path = '/home/avasbr/Desktop/train-images.idx3-ubyte'
-train_lbl_path = '/home/avasbr/Desktop/train-labels.idx1-ubyte' 
-test_img_path = '/home/avasbr/Desktop/t10k-images.idx3-ubyte' 
-test_lbl_path = '/home/avasbr/Desktop/t10k-labels.idx1-ubyte'
+train_img_path = '/home/avasbr/Desktop/MNIST_dataset/train-images.idx3-ubyte'
+train_lbl_path = '/home/avasbr/Desktop/MNIST_dataset/train-labels.idx1-ubyte' 
+test_img_path = '/home/avasbr/Desktop/MNIST_dataset/t10k-images.idx3-ubyte' 
+test_lbl_path = '/home/avasbr/Desktop/MNIST_dataset/t10k-labels.idx1-ubyte'
 
 # convert the raw images into feature vectors
 train_img = idx2numpy.convert_from_file(train_img_path)
@@ -33,7 +33,7 @@ for i,idx in enumerate(test_lbl):
 	y_te[idx,i] = 1
 
 # Neural network initialization parameters
-n_hid = [75]
+n_hid = []
 decay = 0.0001
 n_iter = 100
 method = 'L-BFGS'
@@ -51,10 +51,8 @@ print 'Optimization method: ',method
 print 'Setting up the softmax classifier...'
 # softmax regression if we don't provide hidden units
 nnet = scl.SoftmaxClassifier(d=d,k=k,n_hid=n_hid,decay=decay) 
-nnet.set_weights('random')
+nnet.set_weights('alt_random')
 print 'Training...'
 nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter)
 pred,mce_te = nnet.predict(X_te,y_te)
-pred,mce_tr = nnet.predict(X_tr,y_tr)
 print 'Misclassification error on test set: ',mce_te
-print 'Misclassification error on training set: ',mce_tr

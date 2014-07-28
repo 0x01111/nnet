@@ -13,7 +13,8 @@ class Network(object):
 		self.activ = activ # activation functions
 		self.cost = cost # cost function
 		self.bprop = bprop # backpropagation function
-		# self.cost_vector = [] # error values for each weight 
+		# self.cost_vector = [] # error values for each weight
+		self.iter_num = 0
 
 	def print_init_settings(self):
 		''' Prints initialization settings '''
@@ -136,7 +137,8 @@ class Network(object):
 	def loss(self,w,_X,y):
 		''' convenience loss function for batch optimization methods, e.g.,
 		fmin_cg, fmin_l_bfgs_b '''
-
+		self.iter_num += 1
+		print 'Starting iteration: ',self.iter_num
 		wts = nu.reroll(w,self.n_nodes)
 		self.fprop(_X,wts)
 		E = self.cost(y,wts)
@@ -154,11 +156,10 @@ class Network(object):
 	def update(self,_X,y,wts=None):
 		''' convenience function for mini-batch optimization methods, e.g., 
 		gradient_descent, momentum, improved_momentum'''
-		
 		if not wts:
 			wts = self.wts_
 		self.fprop(_X,wts)
-
+		dE = self.bprop(_X,y,wts)
 		return self.bprop(_X,y,wts)
 
 	# Plotting function

@@ -7,7 +7,7 @@ def conjugate_gradient(wts,_X,y,n_nodes,loss,loss_grad,n_iter=None):
 	neural net inter-layer weights'''
 	
 	w0 = nu.unroll(wts)
-	if not n_iter:
+	if not n_iter == None:
 		wf = fmin_cg(loss,w0,loss_grad,(_X,y),maxiter=n_iter)
 	else:
 		wf = fmin_cg(loss,w0,loss_grad,(_X,y))
@@ -18,7 +18,7 @@ def lbfgs(wts,_X,y,n_nodes,loss,loss_grad,n_iter=None):
 	neural net inter-layer weights'''
 	
 	w0 = nu.unroll(wts)
-	if not n_iter:
+	if not n_iter == None:
 		res = fmin_l_bfgs_b(loss,w0,loss_grad,(_X,y),maxiter=n_iter)
 	else:
 		res = fmin_l_bfgs_b(loss,w0,loss_grad,(_X,y))
