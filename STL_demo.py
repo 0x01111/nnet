@@ -10,10 +10,10 @@ import Autoencoder as ae
 import SoftmaxClassifier as scl
 
 # define the paths
-train_img_path = '/home/avasbr/Desktop/train-images.idx3-ubyte'
-train_lbl_path = '/home/avasbr/Desktop/train-labels.idx1-ubyte' 
-test_img_path = '/home/avasbr/Desktop/t10k-images.idx3-ubyte' 
-test_lbl_path = '/home/avasbr/Desktop/t10k-labels.idx1-ubyte'
+train_img_path = '/home/avasbr/Desktop/MNIST_dataset/train-images.idx3-ubyte'
+train_lbl_path = '/home/avasbr/Desktop/MNIST_dataset/train-labels.idx1-ubyte' 
+test_img_path = '/home/avasbr/Desktop/MNIST_dataset/t10k-images.idx3-ubyte' 
+test_lbl_path = '/home/avasbr/Desktop/MNIST_dataset/t10k-labels.idx1-ubyte'
 
 # load all the data
 train_img = idx2numpy.convert_from_file(train_img_path)
@@ -34,31 +34,33 @@ X_ul = np.reshape(train_img[ul_idx],(m_ul,d)).T/255.
 
 # this block is just for verification purposes/sanity checks - won't be used
 y_ul = np.zeros((k_ul,m_ul))
-for i,c in enumerate(train_lbl[ul_idx]):
-	y_ul[ul_digits.index(c),i] = 1
+for i,cidx in enumerate(train_lbl[ul_idx]):
+	y_ul[ul_digits.index(cidx),i] = 1
 
 # set up training data
 tr_digits = [0,1,2,3,4]
 tr_idx = [i for i,v in enumerate(train_lbl) if v in tr_digits]
-
 m_tr = len(tr_idx)
-X_tr = np.reshape(train_img[tr_idx],(m_tr,d)).T/255
 k_tr = len(tr_digits)
+
+X_tr = np.reshape(train_img[tr_idx],(m_tr,d)).T/255
+
 y_tr = np.zeros((k_tr,m_tr))
-for i,c in enumerate(train_lbl[tr_idx]):
-	y_tr[tr_digits.index(c),i] = 1
+for i,cidx in enumerate(train_lbl[tr_idx]):
+	y_tr[tr_digits.index(cidx),i] = 1
 
 # set up test data
 te_idx = [i for i,v in enumerate(test_lbl) if v in tr_digits]
 m_te = len(te_idx)
 X_te = np.reshape(test_img[te_idx],(m_te,d)).T/255.
 y_te = np.zeros((k_tr,m_te))
-for i,c in enumerate(test_lbl[te_idx]):
-	y_te[tr_digits.index(c),i] = 1
+for i,cidx in enumerate(test_lbl[te_idx]):
+	y_te[tr_digits.index(cidx),i] = 1
 
 # Various initialization values
 sae_hid = 200
 scl_hid = [25]
+n_iter = 100
 decay = 0.0001
 beta = 3
 rho = 0.01
@@ -68,9 +70,9 @@ print 'Test 1: Running softmax classifier on raw pixels'
 print '------------------------------------------------'
 print 'Number of training samples: ',m_tr
 print 'Number of testing samples: ',m_te
-softmax = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=scl_hid,decay=decay)
-softmax.set_weights('alt_random')
-pred,mce = softmax.fit(X_tr,y_tr,method=method).predict(X_te,y_te)
+nnet = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=scl_hid,decay=decay)
+nnet.set_weights('alt_random')
+pred,mce = nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter).predict(X_te,y_te)
 print 'Misclassification rate: ',mce
 
 # print 'Test 2: Run softmax classifier using learned features from unlabeled data'
