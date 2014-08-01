@@ -15,3 +15,4 @@ Notes/Thoughts/Concerns:
 ------------------------
 - All the optimization techniques assume X to be pre-appended with a row of ones at the top - should I just switch permanently to W,b, or keep this 'extended' data matrix style? 
 - Currently have the data matrix as d x m, whereas most conventions use m x d - I should probably switch this at some point, but I think this will be a significant effort
+- Need to change the STL_demo so that the partitioning of X,y data is cleaner - better to load all of it first, then slice

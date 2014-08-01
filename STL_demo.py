@@ -43,7 +43,7 @@ tr_idx = [i for i,v in enumerate(train_lbl) if v in tr_digits]
 m_tr = len(tr_idx)
 k_tr = len(tr_digits)
 
-X_tr = np.reshape(train_img[tr_idx],(m_tr,d)).T/255
+X_tr = np.reshape(train_img[tr_idx],(m_tr,d)).T/255.
 
 y_tr = np.zeros((k_tr,m_tr))
 for i,cidx in enumerate(train_lbl[tr_idx]):
@@ -59,30 +59,36 @@ for i,cidx in enumerate(test_lbl[te_idx]):
 
 # Various initialization values
 sae_hid = 200
-scl_hid = [25]
-n_iter = 100
+scl_hid = []
+n_iter = 400
 decay = 0.0001
 beta = 3
 rho = 0.01
 method = 'L-BFGS'
 
-print 'Test 1: Running softmax classifier on raw pixels'
-print '------------------------------------------------'
-print 'Number of training samples: ',m_tr
-print 'Number of testing samples: ',m_te
-nnet = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=scl_hid,decay=decay)
-nnet.set_weights('alt_random')
-pred,mce = nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter).predict(X_te,y_te)
-print 'Misclassification rate: ',mce
-
-# print 'Test 2: Run softmax classifier using learned features from unlabeled data'
-# print '--------------------------------------------------------------------------'
-# print 'Number of unlabeled samples: ',m_u
+# print 'Test 1: Running softmax classifier on raw pixels'
+# print '------------------------------------------------'
 # print 'Number of training samples: ',m_tr
 # print 'Number of testing samples: ',m_te
-# sparse_ae = ae.Autoencoder(d=d,k=k_ul,n_hid=sae_hid,decay=decay,beta=beta,rho=rho)
-# sparse_ae.set_weights('alt_random')
-# sparse_ae.fit(X_u,method=method)
-# X_tr_tfm = sparse_ae.transform(X_tr)
-# X_te_tfm = sparse_ae.transfrom(X_te)
-# softmax = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=scl_hid,decay=decay):
+# nnet = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=scl_hid,decay=decay)
+# nnet.set_weights('alt_random')
+# pred,mce = nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter).predict(X_te,y_te)
+# print 'Misclassification rate: ',mce
+
+print 'Test 2: Run softmax classifier using learned features from unlabeled data'
+print '--------------------------------------------------------------------------'
+print 'Number of unlabeled samples: ',m_ul
+print 'Number of training samples: ',m_tr
+print 'Number of testing samples: ',m_te
+print 'Applying a sparse autoencoder to the unlabeled data...'
+sae_net = ae.Autoencoder(d=d,n_hid=sae_hid,decay=decay,beta=beta,rho=rho)
+sae_net.set_weights('alt_random')
+sae_net.fit(X_ul,method=method)
+print 'Transforming the training and testing data to sparse features...'
+X_tr_tfm = sae_net.transform(X_tr)
+X_te_tfm = sae_net.transfrom(X_te)
+nnet = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=scl_hid,decay=decay)
+nnet.set_weights('alt_random')
+print 'Performing Softmax regression'
+pred,mce = nnet.fit(X_tr_tfm,y_tr,method=method,n_iter=n_iter).predict(X_te_tfm,y_te)
+print 'Misclassification rate: ',mce
