@@ -4,7 +4,7 @@ import Autoencoder as ae
 import matplotlib.pyplot as plt
 
 # define the paths
-train_img_path = '/home/avasbr/Desktop/MNIST_dataset/train-images.idx3-ubyte'
+train_img_path = '/home/bhargav/datasets/MNIST/train-images.idx3-ubyte'
 
 # convert the raw images into feature vectors
 num_img = 10000
@@ -42,7 +42,4 @@ def visualize_image_bases(X_max,n_hid,w=28,h=28):
 		plt.imshow(curr_img,cmap='gray',interpolation='none')
 
 visualize_image_bases(X_max, n_hid)
-
-
-
-
+plt.show()
