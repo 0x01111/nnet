@@ -32,7 +32,7 @@ class testNeuralNetworkCore(unittest.TestCase):
 		grad = nnet.bprop(self._X,self._X[1:])
 		bgrad = nu.unroll(grad)
 
-		err_tol = 1e-9	# tolerance
+		err_tol = 1e-10	# tolerance
 		eps = 1e-4	# epsilon (for numerical gradient computation)
 
 		# Numerical computation of the gradient..but checking every single derivative is 

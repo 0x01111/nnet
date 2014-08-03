@@ -12,82 +12,62 @@ import SoftmaxClassifier as scl
 # define the paths
 train_img_path = '/home/avasbr/Desktop/MNIST_dataset/train-images.idx3-ubyte'
 train_lbl_path = '/home/avasbr/Desktop/MNIST_dataset/train-labels.idx1-ubyte' 
-test_img_path = '/home/avasbr/Desktop/MNIST_dataset/t10k-images.idx3-ubyte' 
-test_lbl_path = '/home/avasbr/Desktop/MNIST_dataset/t10k-labels.idx1-ubyte'
 
 # load all the data
 train_img = idx2numpy.convert_from_file(train_img_path)
 train_lbl = idx2numpy.convert_from_file(train_lbl_path)
-test_img = idx2numpy.convert_from_file(test_img_path)
-test_lbl = idx2numpy.convert_from_file(test_lbl_path)
-
-dummy,row,col = train_img.shape
+m_tr,row,col = train_img.shape
 d = row*col # dimensions of training data
+k = max(train_lbl)+1
+X = np.reshape(train_img,(m_tr,d)).T/255.
+y = np.zeros((k,m_tr))
+for i,cidx in enumerate(train_lbl):
+	y[cidx,i] = 1
 
-# set up unlabeled data - we will learn features from this data later
+# set up the unlabeled data
 ul_digits = [5,6,7,8,9]
 ul_idx = [i for i,v in enumerate(train_lbl) if v in ul_digits]
-m_ul = len(ul_idx)
-k_ul = len(ul_digits)
+X_ul = X[:,ul_idx]
+temp = y[:,ul_idx]
+y_ul = temp[ul_digits,:]
 
-X_ul = np.reshape(train_img[ul_idx],(m_ul,d)).T/255. 
-
-# this block is just for verification purposes/sanity checks - won't be used
-y_ul = np.zeros((k_ul,m_ul))
-for i,cidx in enumerate(train_lbl[ul_idx]):
-	y_ul[ul_digits.index(cidx),i] = 1
-
-# set up training data
+# set up training and test data
 tr_digits = [0,1,2,3,4]
-tr_idx = [i for i,v in enumerate(train_lbl) if v in tr_digits]
-m_tr = len(tr_idx)
 k_tr = len(tr_digits)
 
-X_tr = np.reshape(train_img[tr_idx],(m_tr,d)).T/255.
+tr_idx = [i for i,v in enumerate(train_lbl) if v in tr_digits]
+m_l = len(tr_idx)
+X_l = X[:,tr_idx]
+temp = y[:,tr_idx]
+y_l = temp[tr_digits,:]
 
-y_tr = np.zeros((k_tr,m_tr))
-for i,cidx in enumerate(train_lbl[tr_idx]):
-	y_tr[tr_digits.index(cidx),i] = 1
-
-# set up test data
-te_idx = [i for i,v in enumerate(test_lbl) if v in tr_digits]
-m_te = len(te_idx)
-X_te = np.reshape(test_img[te_idx],(m_te,d)).T/255.
-y_te = np.zeros((k_tr,m_te))
-for i,cidx in enumerate(test_lbl[te_idx]):
-	y_te[tr_digits.index(cidx),i] = 1
+X_tr = X_l[:,:(m_l/2)]
+y_tr = y_l[:,:(m_l/2)]
+X_te = X_l[:,(m_l/2):]
+y_te = y_l[:,(m_l/2):]
 
 # Various initialization values
 sae_hid = 200
 scl_hid = []
 n_iter = 400
-decay = 0.0001
+decay = 0.003
 beta = 3
-rho = 0.01
+rho = 0.1
 method = 'L-BFGS'
 
-# print 'Test 1: Running softmax classifier on raw pixels'
-# print '------------------------------------------------'
-# print 'Number of training samples: ',m_tr
-# print 'Number of testing samples: ',m_te
-# nnet = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=scl_hid,decay=decay)
-# nnet.set_weights('alt_random')
-# pred,mce = nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter).predict(X_te,y_te)
-# print 'Misclassification rate: ',mce
+print 'Test 1: Run softmax classifier on raw pixels'
+nnet = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=scl_hid,decay=decay)
+nnet.set_weights('alt_random')
+pred,mce = nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter).predict(X_te,y_te)
+print 'Misclassification rate: ',mce
 
 print 'Test 2: Run softmax classifier using learned features from unlabeled data'
-print '--------------------------------------------------------------------------'
-print 'Number of unlabeled samples: ',m_ul
-print 'Number of training samples: ',m_tr
-print 'Number of testing samples: ',m_te
-print 'Applying a sparse autoencoder to the unlabeled data...'
 sae_net = ae.Autoencoder(d=d,n_hid=sae_hid,decay=decay,beta=beta,rho=rho)
 sae_net.set_weights('alt_random')
-sae_net.fit(X_ul,method=method)
-print 'Transforming the training and testing data to sparse features...'
+sae_net.fit(X_ul,method=method,n_iter=n_iter)
 X_tr_tfm = sae_net.transform(X_tr)
-X_te_tfm = sae_net.transfrom(X_te)
-nnet = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=scl_hid,decay=decay)
+X_te_tfm = sae_net.transform(X_te)
+nnet = scl.SoftmaxClassifier(d=sae_hid,k=k_tr,n_hid=scl_hid,decay=decay)
 nnet.set_weights('alt_random')
 print 'Performing Softmax regression'
 pred,mce = nnet.fit(X_tr_tfm,y_tr,method=method,n_iter=n_iter).predict(X_te_tfm,y_te)

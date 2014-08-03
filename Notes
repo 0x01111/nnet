@@ -1,6 +1,7 @@
 This commit:
 ------------
 - "Self-taught learning" - using features learned via the sparse autoencoder
+- Testing code now with OpenBLAS - still not as fast as can be on virtualbox though, might need to look into this..
 
 Backlog (major items):
 ----------------------
@@ -10,6 +11,7 @@ Backlog (major items):
 - start profiling code
 - clean up the directory structure
 - unit tests for demos and other functions, including gradient descent
+- add documentation for demos
 
 Notes/Thoughts/Concerns:
 ------------------------
