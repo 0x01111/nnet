@@ -21,11 +21,10 @@ rho = 0.1
 n_iter = 400
 method = 'L-BFGS'
 
-print 'Sparse Autoencoder on MNIST data'
-print '--------------------------------'
-print 'Input feature size = ',d
-print 'Number of hidden units: ',n_hid
-print 'Optimization method: ',method
+print 'Sparse Autoencoder applied to MNIST data\n'
+print 'Input feature size:',d
+print 'Number of hidden units:',n_hid
+print 'Optimization method:',method
 
 print 'Fitting a sparse autoencoder...'
 # softmax regression if we don't provide hidden units

@@ -1,7 +1,7 @@
-This commit:
+Major 
 ------------
 - Finally finished the STL demo - turns out I was summing over the bias units as well in the regularization terms, which doesn't make sense;
-we don't want to constrain those values to 0
+we don't want to constrain those values to 0. 
 
 Backlog (major items):
 ----------------------
@@ -14,7 +14,7 @@ Backlog (major items):
 - unit tests for demos and other functions, including gradient descent
 - add documentation for demos
 
-Notes/Thoughts/Concerns:
+Thoughts/Concerns:
 ------------------------
 - All the optimization techniques assume X to be pre-appended with a row of ones at the top - should I just switch permanently to W,b, or keep this 'extended' data matrix style? 
 - Currently have the data matrix as d x m, whereas most conventions use m x d - I should probably switch this at some point, but I think this will be a significant effort

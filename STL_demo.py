@@ -45,24 +45,62 @@ X_tr = X_l[:,:(m_l/2)]
 y_tr = y_l[:,:(m_l/2)]
 X_te = X_l[:,(m_l/2):]
 y_te = y_l[:,(m_l/2):]
+k_te,m_te = y_te.shape 
 
 # Various initialization values
 sae_hid = 200
 scl_hid = []
-n_iter = 400
 sae_decay = 0.003
 scl_decay = 0.0001
 beta = 3
 rho = 0.1
 method = 'L-BFGS'
+n_iter = 400
 
-print 'Test 1: Running a softmax classifier on raw pixels'
+print 'Self-taught learning demo\n'
+print 'Data:'
+print '-----'
+print 'Number of samples for training:',m_l
+print 'Number of samples for testing:',m_te,'\n'
+print 'Part 1: Softmax regression on raw pixels\n'
+
+print 'Parameters:'
+print '-----------'
+print 'Input feature size:',d
+print 'Output dimension:',k_tr
+print 'Decay term:',scl_decay
+print 'Optimization method:',method
+print 'Max iterations:',n_iter,'\n'
+
+print 'Training a softmax classifier...\n'
 nnet = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=scl_hid,decay=scl_decay)
 nnet.set_weights('alt_random')
 pred,mce = nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter).predict(X_te,y_te)
-print 'Misclassification rate: ',mce,' [Accuracy:',100*(1-mce)']'
+print 'Performance'
+print '-----------'
+print 'Accuracy:',100*(1-mce),'%\n'
 
-print 'Test 2: Running a softmax classifier using learned features from unlabeled data, using a sparse autoencoder'
+print 'Part 2: Softmax regression on learned features via autoencoders\n'
+
+print 'Parameters:'
+print '-----------'
+print '- Autoencoder -'
+print 'Input feature size:',d
+print 'Number of hidden units:',sae_hid
+print 'Decay term:',sae_decay
+print 'Sparsity term:',rho
+print 'Beta:',beta
+print 'Optimization method:',method
+print 'Max iterations:',n_iter,'\n'
+
+print '- Softmax -'
+print 'Input feature size:',sae_hid
+print 'Output dimension:',k_tr
+print 'Decay term:',scl_decay
+print 'Optimization method:',method
+print 'Max iterations:',n_iter,'\n'
+
+print 'Applying a sparse autoencoder to learn features...'
 sae_net = ae.Autoencoder(d=d,n_hid=sae_hid,decay=sae_decay,beta=beta,rho=rho)
 sae_net.set_weights('alt_random')
 sae_net.fit(X_ul,method=method,n_iter=n_iter)
@@ -70,6 +108,8 @@ X_tr_tfm = sae_net.transform(X_tr)
 X_te_tfm = sae_net.transform(X_te)
 nnet = scl.SoftmaxClassifier(d=sae_hid,k=k_tr,n_hid=scl_hid,decay=scl_decay)
 nnet.set_weights('alt_random')
-print 'Performing Softmax regression'
+print 'Training a softmax classifier on learned features...\n'
 pred,mce = nnet.fit(X_tr_tfm,y_tr,method=method,n_iter=n_iter).predict(X_te_tfm,y_te)
-print 'Misclassification rate: ',mce,'[Accuracy:',100*(1-mce)']'
+print 'Performance'
+print '-----------'
+print 'Accuracy:',100*(1-mce)

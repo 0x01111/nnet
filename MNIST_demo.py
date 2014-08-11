@@ -35,24 +35,34 @@ for i,idx in enumerate(test_lbl):
 # Neural network initialization parameters
 n_hid = []
 decay = 0.0001
-n_iter = 100
+n_iter = 400
 method = 'L-BFGS'
 
-print 'MNIST classification using the Softmax classifier'
-print '-------------------------------------------------'
-print 'Input feature size = ',d
-print 'Output dimension = ',k
-print 'Number of samples for training: ',m_tr
-print 'Number of samples for testing: ',m_te
-print 'Number of hidden layers: ',len(n_hid)
-print 'Number of iterations: ',n_iter
-print 'Optimization method: ',method
+print 'MNIST classification using the Softmax classifier\n'
+
+print 'Data:'
+print '-----'
+print 'Number of samples for training:',m_tr
+print 'Number of samples for testing:',m_te,'\n'
+
+print 'Parameters:'
+print '-----------'
+print 'Input feature size:',d
+print 'Output dimension:',k
+print 'Decay term:',decay
+print 'Optimization method:',method
+print 'Max iterations:',n_iter,'\n'
 
 print 'Setting up the softmax classifier...'
 # softmax regression if we don't provide hidden units
 nnet = scl.SoftmaxClassifier(d=d,k=k,n_hid=n_hid,decay=decay) 
 nnet.set_weights('alt_random')
-print 'Training...'
+print 'Training...\n'
 nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter)
 pred,mce_te = nnet.predict(X_te,y_te)
-print 'Misclassification error on test set: ',mce_te
+
+print 'Performance:'
+print '------------'
+print 'Accuracy:',100.*(1-mce_te),'%'
+
+
