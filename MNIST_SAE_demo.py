@@ -4,7 +4,7 @@ import Autoencoder as ae
 import matplotlib.pyplot as plt
 
 # define the paths
-train_img_path = '/home/avasbr/Desktop/MNIST_dataset/train-images.idx3-ubyte'
+train_img_path = '/home/avasbr/datasets/MNIST/train-images.idx3-ubyte'
 
 # convert the raw images into feature vectors
 num_img = 10000

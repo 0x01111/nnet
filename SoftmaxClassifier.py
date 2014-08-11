@@ -27,7 +27,7 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 			wts = self.wts_
 
 		#  E = 1/N*sum(-y*log(p)) - negative log probability of the right answer
-		E = np.mean(np.sum(-1.0*y*np.log(self.act[-1]),axis=0)) + 0.5*self.decay*sum([np.sum(w**2) for w in wts])
+		E = np.mean(np.sum(-1.0*y*np.log(self.act[-1]),axis=0)) + 0.5*self.decay*sum([np.sum(w[1:]**2) for w in wts])
 
 		return E
 
@@ -37,24 +37,25 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		if not wts:
 			wts = self.wts_
 
-		# reversing the lists makes it easier to work with 					
+		# reversing the lists makes it easier 					
 		wts = wts[::-1]
 		act = self.act[::-1]
 
 		m = _X.shape[1]
-		dE_dW = []
+		dE_dW = len(wts)*[None]
 		
 		# the final layer is a softmax, so calculate the derivative with respect to 
 		# the inputs to the softmax first
 		dE_dz = act[0]-y
 		
-		if len(wts)>1: # wts = 1 means there's no hidden layer
+		if len(wts)>1: # wts = 1 means there's no hidden layer = softmax regression
 			for i,a in enumerate(act[1:]):
-				dE_dW.append(1.0/m*np.dot(a,dE_dz.T) + self.decay*wts[i])
+				dE_dW[i] = 1./m*np.dot(a,dE_dz.T)
+				dE_dW[i][1:] += self.decay*wts[i][1:]
 				dE_da = np.dot(wts[i],dE_dz)
 				dE_dz = (dE_da*a*(1-a))[1:] # no connection to the bias node
-		
-		dE_dW.append(1.0/m*np.dot(_X,dE_dz.T) + self.decay*wts[-1])
+		dE_dW[-1] = 1./m*np.dot(_X,dE_dz.T)
+		dE_dW[-1][1:] += self.decay*wts[-1][1:]
 
 		# re-reverse and return
 		return dE_dW[::-1]

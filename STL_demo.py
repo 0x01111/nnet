@@ -10,8 +10,8 @@ import Autoencoder as ae
 import SoftmaxClassifier as scl
 
 # define the paths
-train_img_path = '/home/avasbr/Desktop/MNIST_dataset/train-images.idx3-ubyte'
-train_lbl_path = '/home/avasbr/Desktop/MNIST_dataset/train-labels.idx1-ubyte' 
+train_img_path = '/home/avasbr/datasets/MNIST/train-images.idx3-ubyte'
+train_lbl_path = '/home/avasbr/datasets/MNIST/train-labels.idx1-ubyte' 
 
 # load all the data
 train_img = idx2numpy.convert_from_file(train_img_path)
@@ -50,25 +50,26 @@ y_te = y_l[:,(m_l/2):]
 sae_hid = 200
 scl_hid = []
 n_iter = 400
-decay = 0.003
+sae_decay = 0.003
+scl_decay = 0.0001
 beta = 3
 rho = 0.1
 method = 'L-BFGS'
 
-print 'Test 1: Run softmax classifier on raw pixels'
-nnet = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=scl_hid,decay=decay)
+print 'Test 1: Running a softmax classifier on raw pixels'
+nnet = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=scl_hid,decay=scl_decay)
 nnet.set_weights('alt_random')
 pred,mce = nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter).predict(X_te,y_te)
-print 'Misclassification rate: ',mce
+print 'Misclassification rate: ',mce,' [Accuracy:',100*(1-mce)']'
 
-print 'Test 2: Run softmax classifier using learned features from unlabeled data'
-sae_net = ae.Autoencoder(d=d,n_hid=sae_hid,decay=decay,beta=beta,rho=rho)
+print 'Test 2: Running a softmax classifier using learned features from unlabeled data, using a sparse autoencoder'
+sae_net = ae.Autoencoder(d=d,n_hid=sae_hid,decay=sae_decay,beta=beta,rho=rho)
 sae_net.set_weights('alt_random')
 sae_net.fit(X_ul,method=method,n_iter=n_iter)
 X_tr_tfm = sae_net.transform(X_tr)
 X_te_tfm = sae_net.transform(X_te)
-nnet = scl.SoftmaxClassifier(d=sae_hid,k=k_tr,n_hid=scl_hid,decay=decay)
+nnet = scl.SoftmaxClassifier(d=sae_hid,k=k_tr,n_hid=scl_hid,decay=scl_decay)
 nnet.set_weights('alt_random')
 print 'Performing Softmax regression'
 pred,mce = nnet.fit(X_tr_tfm,y_tr,method=method,n_iter=n_iter).predict(X_te_tfm,y_te)
-print 'Misclassification rate: ',mce
+print 'Misclassification rate: ',mce,'[Accuracy:',100*(1-mce)']'

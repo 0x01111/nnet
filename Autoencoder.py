@@ -26,11 +26,10 @@ class Autoencoder(NeuralNetworkCore.Network):
 		
 		# compute each of the individual costs
 		main_cost = 0.5*np.mean(np.sum((y-self.act[1])**2,axis=0))
-		decay_cost = 0.5*self.decay*sum([np.sum(w**2) for w in wts])
+		decay_cost = 0.5*self.decay*sum([np.sum(w[1:]**2) for w in wts])
 		sparsity_cost = self.beta*np.sum(self.rho*np.log(self.rho/avg_act)+
 			(1-self.rho)*np.log((1-self.rho)/(1-avg_act)))
 		E = main_cost + decay_cost + sparsity_cost
-		
 		return E
 
 	def bprop(self,_X,y,wts=None):
@@ -40,14 +39,16 @@ class Autoencoder(NeuralNetworkCore.Network):
 		avg_act = np.mean(self.act[0][1:],axis=1)
 		m = _X.shape[1]
 		
-		dE_dW = []
+		dE_dW = [None,None] # there can only ever be two weight matrices
 		dE_dz = -1.0*(y-self.act[1])*self.act[1]*(1-self.act[1])
-		dE_dW.append(1.0/m*np.dot(self.act[0],dE_dz.T) + self.decay*wts[1])
+		dE_dW[1] = 1./m*np.dot(self.act[0],dE_dz.T) # gradient of the hidden to output layer weight matrix
+		dE_dW[1][1:] += self.decay*wts[1][1:] # add the gradients of the regularization term
 		dE_da = np.dot(wts[1],dE_dz)[1:] + (self.beta*(-1.0*self.rho/avg_act + (1-self.rho)/(1-avg_act)))[:,np.newaxis]
 		dE_dz = dE_da*self.act[0][1:]*(1-self.act[0][1:])
-		dE_dW.append(1.0/m*(np.dot(_X,dE_dz.T))+self.decay*wts[0])
+		dE_dW[0] = 1./m*np.dot(_X,dE_dz.T) # gradient of the input to hidden layer weight matrix
+		dE_dW[0][1:] += self.decay*wts[0][1:]
 		
-		return dE_dW[::-1]
+		return dE_dW
 
 	def fit(self,X=None,x_data=None,method='L-BFGS',n_iter=None,learn_rate=0.5,alpha=0.9):
 		''' See NeuralNetworkCore,Network.fit for a description of fit. 

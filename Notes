@@ -1,10 +1,11 @@
 This commit:
 ------------
-- "Self-taught learning" - using features learned via the sparse autoencoder
-- Testing code now with OpenBLAS - still not as fast as can be on virtualbox though, might need to look into this..
+- Finally finished the STL demo - turns out I was summing over the bias units as well in the regularization terms, which doesn't make sense;
+we don't want to constrain those values to 0
 
 Backlog (major items):
 ----------------------
+- clean up the optimization techniques - use scipy.optimize.minimize(), and use a function that provides both cost and grad - easier to work with - this also has the added advantage of using custom optimization techniques
 - have a default weight initialization
 - autodiff + theano
 - look into packing/deprecation
@@ -17,4 +18,3 @@ Notes/Thoughts/Concerns:
 ------------------------
 - All the optimization techniques assume X to be pre-appended with a row of ones at the top - should I just switch permanently to W,b, or keep this 'extended' data matrix style? 
 - Currently have the data matrix as d x m, whereas most conventions use m x d - I should probably switch this at some point, but I think this will be a significant effort
-- Need to change the STL_demo so that the partitioning of X,y data is cleaner - better to load all of it first, then slice
