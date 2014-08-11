@@ -1,8 +1,7 @@
 # This goal of this demo is to build a neural network which can recognize digits 0-4, 
 # but is trained on digits 5-9 - this is known as 'transfer' learning, or 'self-taught' 
-# learning, where the idea is to learn features for one classification task is likely 
-# to be useful for a similar classification task. This method is particularly useful if 
-# there is an abundance of data for one classification task, but not of another, similar one.
+# learning, where the idea is to learn features for one classification task in the hopes 
+# the the same features can be applied to another, very similar classification task.
 
 import idx2numpy
 import numpy as  np
