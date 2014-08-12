@@ -1,3 +1,6 @@
+# This demo demonstrates how an autoencoder enforcing sparsity can learn edge-filters from
+# sampling patches of textured images
+
 import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
@@ -82,18 +85,32 @@ def show_reconstruction(X,X_r,idx,w=8,h=8):
 
 if __name__ == '__main__':
 	
-	print 'Sampling image patches..'
 	mat_file = '/home/avasbr/datasets/IMAGES.mat'
 	I = load_images(mat_file)
-	X = sample_images(I)
-
-	print 'Applying a sparse autoencoder to the data'
+	n = 1000
+	X = sample_images(I,n=n)
 
 	d = X.shape[0] # input dimension
 	n_hid = 25 # number of hidden nodes
 	decay = 0.0001
 	beta = 3
 	rho = 0.01
+	
+	print 'Sparse autoencoder applied to textured data\n'
+
+	print 'Data:'
+	print '------'
+	print 'Number of samples for training:',n,'\n'
+
+	print 'Parameters:'
+	print '------------'
+	print 'Input feature size:',d
+	print 'Decay term:',decay
+	print 'Sparsity term:',rho
+	print 'Beta:',beta,'\n'
+	print 'Optimization method:',method
+
+	print 'Applying a sparse autoencoder to the data...'
 
 	sae = ae.Autoencoder(d=d,n_hid=n_hid,decay=decay,beta=beta,rho=rho)
 	sae.set_weights(method='alt_random')

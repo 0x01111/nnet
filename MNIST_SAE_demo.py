@@ -1,3 +1,7 @@
+# This demo applies the sparse autoencoder to the MNIST data to learn
+# pen-stroke-like features. The self-taught learning (STL) demo explores
+# the use of these features for classification purposes
+
 import idx2numpy
 import numpy as np
 import Autoencoder as ae
@@ -22,9 +26,20 @@ n_iter = 400
 method = 'L-BFGS'
 
 print 'Sparse Autoencoder applied to MNIST data\n'
+
+print 'Data:'
+print '------'
+print 'Number of samples for training:',num_img,'\n'
+
+print 'Parameters:'
+print '------------'
 print 'Input feature size:',d
 print 'Number of hidden units:',n_hid
+print 'Decay term:',decay
+print 'Sparsity term:',rho
+print 'Beta:',beta
 print 'Optimization method:',method
+print 'Max iterations:',n_iter
 
 print 'Fitting a sparse autoencoder...'
 # softmax regression if we don't provide hidden units

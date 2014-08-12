@@ -1,3 +1,6 @@
+# This demo is intended to train a softmax classifier on the MNIST data. This
+# network has no hidden layer, and achieves about 92.6% accuracy on the test set
+
 import idx2numpy
 import numpy as np
 import SoftmaxClassifier as scl
