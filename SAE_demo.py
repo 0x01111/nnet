@@ -113,7 +113,6 @@ if __name__ == '__main__':
 	print 'Applying a sparse autoencoder to the data...'
 
 	sae = ae.Autoencoder(d=d,n_hid=n_hid,decay=decay,beta=beta,rho=rho)
-	sae.set_weights(method='alt_random')
 	sae.fit(X,method='L-BFGS')
 	X_r = sae.transform(X,'reconstruct')
 	X_max = sae.compute_max_activations()

@@ -9,13 +9,12 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 	def __init__(self,d=None,k=None,n_hid=[25],decay=0.0001):
 		
 		# softmax classifier has sigmoid activations for the intermediate
-		# layers, and a final softmacbx layer
+		# layers, and a final softmax layer
 		activ = len(n_hid)*[nu.sigmoid]
 		activ.append(nu.softmax)
 		
 		# set the parameters of the superclass
-		NeuralNetworkCore.Network.__init__(self,d=d,k=k,n_hid=n_hid,activ=activ,
-			cost=self.cost, bprop=self.bprop)
+		NeuralNetworkCore.Network.__init__(self,d=d,k=k,n_hid=n_hid,activ=activ)
 
 		# set hyperparameters
 		self.decay = decay # regularization coefficient

@@ -73,7 +73,6 @@ print 'Max iterations:',n_iter,'\n'
 
 print 'Training a softmax classifier...\n'
 nnet = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=scl_hid,decay=scl_decay)
-nnet.set_weights('alt_random')
 pred,mce = nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter).predict(X_te,y_te)
 print 'Performance'
 print '-----------'
@@ -101,12 +100,10 @@ print 'Max iterations:',n_iter,'\n'
 
 print 'Applying a sparse autoencoder to learn features...'
 sae_net = ae.Autoencoder(d=d,n_hid=sae_hid,decay=sae_decay,beta=beta,rho=rho)
-sae_net.set_weights('alt_random')
 sae_net.fit(X_ul,method=method,n_iter=n_iter)
 X_tr_tfm = sae_net.transform(X_tr)
 X_te_tfm = sae_net.transform(X_te)
 nnet = scl.SoftmaxClassifier(d=sae_hid,k=k_tr,n_hid=scl_hid,decay=scl_decay)
-nnet.set_weights('alt_random')
 print 'Training a softmax classifier on learned features...\n'
 pred,mce = nnet.fit(X_tr_tfm,y_tr,method=method,n_iter=n_iter).predict(X_te_tfm,y_te)
 print 'Performance'

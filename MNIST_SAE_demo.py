@@ -44,7 +44,6 @@ print 'Max iterations:',n_iter
 print 'Fitting a sparse autoencoder...'
 # softmax regression if we don't provide hidden units
 nnet = ae.Autoencoder(d=d,n_hid=n_hid,decay=decay,rho=rho,beta=beta) 
-nnet.set_weights('alt_random')
 nnet.fit(X_tr,method=method,n_iter=n_iter)
 X_max = nnet.compute_max_activations()
 

@@ -1,3 +1,8 @@
+# This is the main skeleton of the neural network - it holds the weight matrices, the intermediate
+# activations, what functions to apply where, etc, etc. It is the base to which all other parts
+# must plug in to for the code to work. The autoencoder and softmax classifier are both subclasses
+# of this class, and define the necessary cost and grad (bprop) functions
+
 import numpy as np
 import matplotlib.pyplot as plt
 import nnetutils as nu
@@ -5,22 +10,16 @@ import nnetoptim as nopt
 
 class Network(object):
 
-	def __init__(self,d=None,k=None,n_hid=None,activ=None,cost=None,bprop=None):
+	def __init__(self,d=None,k=None,n_hid=None,activ=None):
 
 		# network parameters
 		self.n_nodes = [d]+n_hid+[k] # number of nodes in each layer
 		self.act = (len(self.n_nodes)-1)*[None] # activations for each layer (except input)
 		self.activ = activ # activation functions
-		self.cost = cost # cost function
-		self.bprop = bprop # backpropagation function
-		self.num_iter = 0
-		# self.cost_vector = [] # error values for each weight
+		self.set_weights() # set the initial weights of the neural network
 
-	def print_init_settings(self):
-		''' Prints initialization settings '''
-
-	def set_weights(self,method='random',wts=None):
-		'''sets the weights of the neural network based on the specified method
+	def set_weights(self,method='alt_random',wts=None):
+		'''Sets the weights of the neural network based on the specified method
 		
 		Parameters:
 		-----------
@@ -43,15 +42,18 @@ class Network(object):
 		if not wts:
 			self.wts_ = (len(self.n_nodes)-1)*[None]
 
+			# standard random initialization for neural network weights
 			if method=='random':
 				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
 					self.wts_[i] = 0.005*np.random.rand(n1+1,n2)
 
+			# andrew ng's suggested method in the UFLDL tutorial
 			elif method=='alt_random':
 				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
 					v = np.sqrt(6./(n1+n2+1))
 					self.wts_[i] = 2.0*v*np.random.rand(n1+1,n2) - v
 			
+			# mainly useful for testing/debugging purposes
 			elif method=='fixed':
 				last_size=0
 				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
@@ -131,19 +133,17 @@ class Network(object):
 				self.act[i+1] = np.vstack((np.ones([1,m]),self.activ[i+1](np.dot(w.T,self.act[i])))) # sigmoid activations
 			self.act[-1] = self.activ[-1](np.dot(wts[-1].T,self.act[-2]))
 
-	# the following methods are so-called 'conveninence' functions needed for various optimization methods that are called
+	# the following methods are 'conveninence' functions needed for various optimization methods that are called
 	# by the fit method 
 	
 	def loss(self,w,_X,y):
 		''' convenience loss function for batch optimization methods, e.g.,
 		fmin_cg, fmin_l_bfgs_b '''
-		self.num_iter += 1
+		
 		wts = nu.reroll(w,self.n_nodes)
-		# print 'FPROP start...'
 		self.fprop(_X,wts)
-		# print 'FPROP end.'
 		E = self.cost(y,wts)
-		# print 'Iteration: ',self.num_iter
+		
 		return E
 
 	def loss_grad(self,w,_X,y):
@@ -151,20 +151,25 @@ class Network(object):
 		fmin_cg, fmin_l_bfgs_b '''
 		
 		wts = nu.reroll(w,self.n_nodes)
-		# print 'BPROP start...'
 		grad = self.bprop(_X,y,wts)
-		# print 'BPROP end.'
 		dE = nu.unroll(grad)
+		
 		return dE
 
 	def update(self,_X,y,wts=None):
 		''' convenience function for mini-batch optimization methods, e.g., 
 		gradient_descent, momentum, improved_momentum'''
+		
 		if not wts:
 			wts = self.wts_
 		self.fprop(_X,wts)
 		dE = self.bprop(_X,y,wts)
+		
 		return self.bprop(_X,y,wts)
+
+	def reset(self,method='alt_random'):
+		''' resets the weights of the network - useful for re-use'''
+		self.weights(method=method)
 
 	# Plotting function
 	# def plot_error_curve(self):

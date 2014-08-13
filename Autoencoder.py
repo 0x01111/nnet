@@ -9,8 +9,7 @@ class Autoencoder(NeuralNetworkCore.Network):
 	def __init__(self,d=None,n_hid=25,decay=0.0001,rho=0.01,beta=3):
 	
 		# set the parameters of the superclass
-		super(Autoencoder,self).__init__(d=d,k=d,n_hid=[n_hid],activ=[nu.sigmoid,nu.sigmoid],
-			cost=self.cost, bprop=self.bprop)
+		super(Autoencoder,self).__init__(d=d,k=d,n_hid=[n_hid],activ=[nu.sigmoid,nu.sigmoid])
 
 		# set hyperparameters
 		self.decay = decay # regularization coefficient

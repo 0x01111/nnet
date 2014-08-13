@@ -59,7 +59,6 @@ print 'Max iterations:',n_iter,'\n'
 print 'Setting up the softmax classifier...'
 # softmax regression if we don't provide hidden units
 nnet = scl.SoftmaxClassifier(d=d,k=k,n_hid=n_hid,decay=decay) 
-nnet.set_weights('alt_random')
 print 'Training...\n'
 nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter)
 pred,mce_te = nnet.predict(X_te,y_te)
