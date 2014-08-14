@@ -48,7 +48,7 @@ beta = 3
 sae_decay = 0.003
 scl_decay = 0.0001
 method = 'L-BFGS'
-n_iter = 
+n_iter = 400
 
 print 'Performing greedy, layer-wise training of stacked autoencoders...'
 
@@ -68,14 +68,19 @@ for hid in n_hid[1:]:
 	X_tr_tfm = sae_net.transform(X_tr_tfm)
 	curr_hid = hid
 
-print 'Test 1: Softmax regression on raw pixels'
-#TODO
+# print 'Test 1: Softmax regression on raw pixels'
+# #TODO
 print 'Test 2: Softmax regression on learned features from stacked autoencoders'
 scl_net = scl.SoftmaxClassifier(d=n_hid[-1],k=k_tr,n_hid=[],decay=scl_decay)
+scl_net.fit(X_tr_tfm,y_tr,method=method,n_iter=n_iter)
+pred,mce_te = scl_net.predict(X_te,y_te)
+
+print 'Performance:'
+print '------------'
+print 'Accuracy:',100.*(1-mce_te),'%'
+
 
 print 'Test 3: Fine-tuned Deep softmax classifier using learned weight initializations'
 scl_net = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=n_hid,decay=scl_decay)
-
-
-
+scl_net.set_weights(wts=opts_wts_)
 
