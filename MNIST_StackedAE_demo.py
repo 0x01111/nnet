@@ -45,42 +45,76 @@ for i,idx in enumerate(test_lbl):
 n_hid = [200,200]
 rho = 0.1
 beta = 3
-sae_decay = 0.003
-scl_decay = 0.0001
+decay = 0.003
 method = 'L-BFGS'
 n_iter = 400
+
+print 'Deep autoencoders applied to MNIST data'
+
+print 'Data:'
+print '-----'
+print 'Number of samples for training:',m_tr
+print 'Number of samples for testing:',m_te,'\n'
+
+print 'Parameters:'
+print '-----------'
+print 'Input feature size:',d
+print 'Output dimension:',k
+print 'Hidden units:',n_hid
+print '- Autoencoder(s) -'
+print 'Sparsity term:',rho
+print 'Beta:',beta
+print 'Decay term:',decay
+print 'Optimization method:',method
+print 'Max iterations:',n_iter
+print '- Softmax -'
+print 'Decay term:',decay
+print 'Optimization method:',method
+print 'Max iterations:',n_iter,'\n'
+
+# print 'Test 1: Softmax regression on raw pixels'
+# scl_net = scl.SoftmaxClassifier(d=d,k=k,n_hid=n_hid,decay=decay)
+# scl_net.fit(X_tr,y_tr,method=method,n_iter=n_iter)
+# pred,mce_te = scl_net.predict(X_te,y_te)
+# print 'Performance:'
+# print '------------'
+# print 'Accuracy:',100.*(1-mce_te),'%'
 
 print 'Performing greedy, layer-wise training of stacked autoencoders...'
 
 opt_wts_ = [] # stores learned autoencoder weights to be used for initializing the softmax
 
 # first autoencoder
-sae_net = ae.Autoencoder(d=d,n_hid=n_hid[0],decay=sae_decay,beta=beta,rho=rho)
-sae_net.fit(X_tr,method=method,n_iter=n_iter)
-opt_wts_.append(sae_net.wts_[0]) # we only care about the 'encoding' part
-X_tr_tfm = sae_net.transform(X_tr) # the transformed data is fed to subsequent autoencoders
+sae_net_L1 = ae.Autoencoder(d=d,n_hid=n_hid[0],decay=decay,beta=beta,rho=rho)
+sae_net_L1.fit(X_tr,method=method,n_iter=n_iter)
+opt_wts_.append(sae_net_L1.wts_[0]) # we only care about the 'encoding' part
+X_tr_tfm = sae_net_L1.transform(X_tr) # the transformed data is fed to subsequent autoencoders
 
-curr_hid = n_hid[0]
-for hid in n_hid[1:]:
-	sae_net = ae.Autoencoder(d=curr_hid,n_hid=hid,decay=sae_decay,beta=beta,rho=rho)
-	sae_net.fit(X_tr_tfm,method=method,n_iter=n_iter)
-	opt_wts_.append(sae_net.wts_[0])
-	X_tr_tfm = sae_net.transform(X_tr_tfm)
-	curr_hid = hid
+# second autoencoder
+sae_net_L2 = ae.Autoencoder(d=n_hid[0],n_hid=n_hid[1],decay=decay,beta=beta,rho=rho)
+sae_net_L2.fit(X_tr_tfm,method=method,n_iter=n_iter)
+opt_wts_.append(sae_net_L2.wts_[0])
+X_tr_tfm = sae_net_L2.transform(X_tr_tfm)
 
-# print 'Test 1: Softmax regression on raw pixels'
-# #TODO
-print 'Test 2: Softmax regression on learned features from stacked autoencoders'
-scl_net = scl.SoftmaxClassifier(d=n_hid[-1],k=k_tr,n_hid=[],decay=scl_decay)
-scl_net.fit(X_tr_tfm,y_tr,method=method,n_iter=n_iter)
+
+# print 'Test 2: Softmax regression on learned features from stacked autoencoders'
+# scl_net = scl.SoftmaxClassifier(d=n_hid[-1],k=k,n_hid=[],decay=decay)
+# scl_net.fit(X_tr_tfm,y_tr,method=method,n_iter=n_iter)
+# X_te_tfm = sae_net_L2.transform(sae_net_L1.transform(X_te)) # pass the test cases through the stacked autoencoders
+# pred,mce_te = scl_net.predict(X_te_tfm,y_te)
+
+# print 'Performance:'
+# print '------------'
+# print 'Accuracy:',100.*(1-mce_te),'%'
+
+print 'Test 3: Fine-tuned Deep softmax classifier using learned weight initializations'
+scl_net = scl.SoftmaxClassifier(d=d,k=k,n_hid=n_hid,decay=decay)
+scl_net.set_weights(wts=opt_wts_)
+scl_net.fit(X_tr,y_tr,method=method,n_iter=n_iter) # fine-tuning
 pred,mce_te = scl_net.predict(X_te,y_te)
 
 print 'Performance:'
 print '------------'
 print 'Accuracy:',100.*(1-mce_te),'%'
 
-
-print 'Test 3: Fine-tuned Deep softmax classifier using learned weight initializations'
-scl_net = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=n_hid,decay=scl_decay)
-scl_net.set_weights(wts=opts_wts_)
 

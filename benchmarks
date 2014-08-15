@@ -7,6 +7,7 @@ multiplications significantly faster (~0.2s vs ~0.06s for multiplying two dense
 
 MNIST_demo.py
 STL_demo.py
+MNIST_StackedAE_demo.py
 
 1. MNIST_demo.py
 
@@ -77,3 +78,38 @@ Performance:
 ------------
 Accuracy: 98.2%
 [Finished in 1744s]
+
+3. MNIST_StackedAE_demo.py
+
+Deep autoencoders applied to MNIST data
+
+Data:
+-----
+Number of samples for training: 60000
+Number of samples for testing: 10000 
+
+Parameters:
+-----------
+Input feature size: 784
+Output dimension: 10
+Hidden units: [200, 200]
+- Autoencoder(s) -
+Sparsity term: 0.1
+Beta: 3
+Decay term: 0.003
+Optimization method: L-BFGS
+Max iterations: 400
+- Softmax -
+Decay term: 0.003
+Optimization method: L-BFGS
+Max iterations: 400 
+
+Performing greedy, layer-wise training of stacked autoencoders...
+
+Test 2: Softmax regression on learned features from stacked autoencoders
+
+Performance:
+------------
+Accuracy: 88.51 %
+[Finished in 4759.0s]
+

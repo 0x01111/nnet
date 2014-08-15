@@ -1,19 +1,20 @@
-Major 
-------------
-- Started coding up my first deep neural network! (using stacked autoencoders with fine-tuning) - still incomplete, but the new file has been added, and if all goes smoothly, should
-be ready by the next commit - there's nothing new to code, should be mostly plug-and-play
+Major items in this commit
+--------------------------
+- Started coding up my first deep neural network! (using stacked autoencoders with fine-tuning) - still incomplete, but the new file has been added, and if all goes smoothly, should be ready by the next commit - there's nothing new to code, should be mostly plug-and-play
 - Added default weight initialization so we dont' have to always do "nnet.set_weights()" after initializing it - should have been in the "__init__" function all along
 - Added more comments, cleaned up the code a little bit
 
 Backlog (major items):
 ----------------------
-- clean up the optimization techniques - use scipy.optimize.minimize(), and use a function that provides both cost and grad - easier to work with - this also has the added advantage of using custom optimization techniques
+- clean up the optimization techniques - use scipy.optimize.minimize(), and write a function that provides both cost and grad - easier to work with - this also has the added advantage of using custom optimization techniques
 - autodiff + theano
 - look into packing/deprecation
 - start profiling code
 - clean up the directory structure
 - unit tests for demos and other functions, including gradient descent
 - add documentation for demo
+- write a display function in nnetutils which prints out stuff
+- Consider writing a 'stacked autoencoder' class - OR! maybe add it directly to the autoencoder class? if you give it an array of hidden nodes, it will just train the deep network in a greedy, layer-wise manner
 
 Ongoing:
 --------
