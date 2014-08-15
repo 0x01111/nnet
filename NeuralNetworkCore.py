@@ -1,7 +1,9 @@
-# This is the main skeleton of the neural network - it holds the weight matrices, the intermediate
-# activations, what functions to apply where, etc, etc. It is the base to which all other parts
-# must plug in to for the code to work. The autoencoder and softmax classifier are both subclasses
-# of this class, and define the necessary cost and grad (bprop) functions
+# This is the main skeleton of the neural network - it really only needs the input size, 
+# the output size, and the hidden nodes per layer to get set up - the activation functions, 
+# cost functions, gradient (bprop) functions, etc should be set-up in the subclasses, because
+# these are what give rise to the variations in neural network architectures. Sparse autoencoders, 
+# RBMs, multilayer softmax nets, even logistic/softmax regression, are all essentially neural
+# networks under the hood. 
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,12 +12,11 @@ import nnetoptim as nopt
 
 class Network(object):
 
-	def __init__(self,d=None,k=None,n_hid=None,activ=None):
+	def __init__(self,d=None,k=None,n_hid=None):
 
 		# network parameters
 		self.n_nodes = [d]+n_hid+[k] # number of nodes in each layer
 		self.act = (len(self.n_nodes)-1)*[None] # activations for each layer (except input)
-		self.activ = activ # activation functions
 		self.set_weights() # set the initial weights of the neural network
 
 	def set_weights(self,method='alt_random',wts=None):

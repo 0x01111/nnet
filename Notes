@@ -14,7 +14,7 @@ Backlog (major items):
 - unit tests for demos and other functions, including gradient descent
 - add documentation for demo
 - write a display function in nnetutils which prints out stuff
-- Consider writing a 'stacked autoencoder' class - OR! maybe add it directly to the autoencoder class? if you give it an array of hidden nodes, it will just train the deep network in a greedy, layer-wise manner
+- Consider writing a 'stacked autoencoder' class - OR! maybe add it directly to the autoencoder class? if you give it an array of hidden nodes, it will just train the deep network in a greedy, layer-wise manner? might be promising...
 
 Ongoing:
 --------
