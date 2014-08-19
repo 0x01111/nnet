@@ -30,7 +30,7 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		return E
 
 	def bprop(self,_X,y,wts=None):
-		'''Back-propagation for L2-regularized '''
+		'''Back-propagation for L2-regularized cross-entropy cost function'''
 
 		if not wts:
 			wts = self.wts_

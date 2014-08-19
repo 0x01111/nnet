@@ -39,7 +39,6 @@ class Network(object):
 		self.wts_
 
 		'''
-
 		if not wts:
 			self.wts_ = (len(self.n_nodes)-1)*[None]
 

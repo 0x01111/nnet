@@ -55,8 +55,8 @@ class Autoencoder(NeuralNetworkCore.Network):
 	def fit(self,X=None,x_data=None,method='L-BFGS',n_iter=None,learn_rate=0.5,alpha=0.9):
 		''' See NeuralNetworkCore,Network.fit for a description of fit. 
 		This function simply calls the super-class version but with y = X'''
-
-		return super(Autoencoder,self).fit(X=X,y=X,x_data=x_data,method=method,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
+		return NeuralNetworkCore.Network.fit(self,X=X,y=X,x_data=x_data,method=method,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
+		# return super(Autoencoder,self).fit(X=X,y=X,x_data=x_data,method=method,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 
 	def transform(self,X,option='reduce'):
 		'''Either transforms the input data or reconstructs it, based on the option
