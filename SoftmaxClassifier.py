@@ -18,7 +18,7 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		# set hyperparameters
 		self.decay = decay # regularization coefficient
 
-	def cost(self,y,wts=None):
+	def compute_cost(self,y,wts=None):
 		''' Cross-entropy: mean(-1.0*y_true*log(y_pred))'''
 		
 		if not wts:
@@ -29,7 +29,7 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 
 		return E
 
-	def bprop(self,_X,y,wts=None):
+	def compute_grad(self,_X,y,wts=None):
 		'''Back-propagation for L2-regularized cross-entropy cost function'''
 
 		if not wts:
@@ -78,7 +78,7 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		'''
 		m = X.shape[1]
 		X = np.append(np.ones([1,m]),X,axis=0)
-		self.fprop(X)
+		self.compute_activations(X)
 		pred = np.argmax(self.act[-1],axis=0) # only the final activation contains the 
 		
 		if y==None:

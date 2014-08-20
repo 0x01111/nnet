@@ -28,8 +28,8 @@ class testNeuralNetworkCore(unittest.TestCase):
 		for n1,n2 in zip(nnet.n_nodes[:-1],nnet.n_nodes[1:]):
 			nnet.wts_.append(0.01*np.cos(np.arange((n1+1)*n2)).reshape(n1+1,n2))
 		
-		nnet.fprop(self._X)
-		grad = nnet.bprop(self._X,self._X[1:])
+		nnet.compute_activations(self._X)
+		grad = nnet.compute_grad(self._X,self._X[1:])
 		bgrad = nu.unroll(grad)
 
 		err_tol = 1e-10	# tolerance
@@ -52,10 +52,10 @@ class testNeuralNetworkCore(unittest.TestCase):
 			weights_minus = nu.reroll(w_minus,nnet.n_nodes)
 			
 			# run fprop and compute the loss for both sides  
-			nnet.fprop(self._X,weights_plus)
-			loss_plus = nnet.cost(self._X[1:],weights_plus)
-			nnet.fprop(self._X,weights_minus)
-			loss_minus = nnet.cost(self._X[1:],weights_minus)
+			nnet.compute_activations(self._X,weights_plus)
+			loss_plus = nnet.compute_cost(self._X[1:],weights_plus)
+			nnet.compute_activations(self._X,weights_minus)
+			loss_minus = nnet.compute_cost(self._X[1:],weights_minus)
 			
 			ngrad[i] = 1.0*(loss_plus-loss_minus)/(2*eps) # ( E(weights[i]+eps) - E(weights[i]-eps) )/(2*eps)
 			
@@ -76,8 +76,8 @@ class testNeuralNetworkCore(unittest.TestCase):
 		for n1,n2 in zip(n_nodes[:-1],n_nodes[1:]):
 			nnet.wts_.append(0.01*np.cos(np.arange((n1+1)*n2)).reshape(n1+1,n2))
 
-		nnet.fprop(self._X) # fprop through the network, sets activations
-		grad = nnet.bprop(self._X,self.y) # back-prop 
+		nnet.compute_activations(self._X) # fprop through the network, sets activations
+		grad = nnet.compute_grad(self._X,self.y) # back-prop 
 		bgrad = nu.unroll(grad)
 
 		err_tol = 1e-10	# tolerance
@@ -100,10 +100,10 @@ class testNeuralNetworkCore(unittest.TestCase):
 			weights_minus = nu.reroll(w_minus,n_nodes)
 			
 			# run fprop and compute the loss for both sides  
-			nnet.fprop(self._X,weights_plus)
-			loss_plus = nnet.cost(self.y, weights_plus)
-			nnet.fprop(self._X,weights_minus)
-			loss_minus = nnet.cost(self.y, weights_minus)
+			nnet.compute_activations(self._X,weights_plus)
+			loss_plus = nnet.compute_cost(self.y, weights_plus)
+			nnet.compute_activations(self._X,weights_minus)
+			loss_minus = nnet.compute_cost(self.y, weights_minus)
 			
 			ngrad[i] = 1.0*(loss_plus-loss_minus)/(2*eps) # ( E(weights[i]+eps) - E(weights[i]-eps) )/(2*eps)
 			
@@ -124,8 +124,8 @@ class testNeuralNetworkCore(unittest.TestCase):
 		for n1,n2 in zip(n_nodes[:-1],n_nodes[1:]):
 			nnet.wts_.append(0.01*np.cos(np.arange((n1+1)*n2)).reshape(n1+1,n2))
 
-		nnet.fprop(self._X)
-		grad = nnet.bprop(self._X,self.y)
+		nnet.compute_activations(self._X)
+		grad = nnet.compute_grad(self._X,self.y)
 		bgrad = nu.unroll(grad)
 
 		err_tol = 1e-10	# tolerance
@@ -148,10 +148,10 @@ class testNeuralNetworkCore(unittest.TestCase):
 			weights_minus = nu.reroll(w_minus,n_nodes)
 			
 			# run fprop and compute the loss for both sides  
-			nnet.fprop(self._X,weights_plus)
-			loss_plus = nnet.cost(self.y,weights_plus)
-			nnet.fprop(self._X,weights_minus)
-			loss_minus = nnet.cost(self.y,weights_minus)
+			nnet.compute_activations(self._X,weights_plus)
+			loss_plus = nnet.compute_cost(self.y,weights_plus)
+			nnet.compute_activations(self._X,weights_minus)
+			loss_minus = nnet.compute_cost(self.y,weights_minus)
 			
 			ngrad[i] = 1.0*(loss_plus-loss_minus)/(2*eps) # ( E(weights[i]+eps) - E(weights[i]-eps) )/(2*eps)
 			

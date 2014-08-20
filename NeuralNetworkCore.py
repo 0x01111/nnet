@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import nnetutils as nu
 import nnetoptim as nopt
+import scipy.optimize
 
 class Network(object):
 
@@ -91,12 +92,15 @@ class Network(object):
 			m = X.shape[1]
 			X = np.vstack((np.ones([1,m]),X))
 
+		w0 = nu.unroll(self.wts_)
+		print type(w0)
 		if method == 'conjugate_gradient':
-			self.fprop(X)
+			self.compute_activations(X)
 			self.wts_ = nopt.conjugate_gradient(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad,n_iter)
 		
 		elif method == 'L-BFGS':
-			self.wts_ = nopt.lbfgs(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad,n_iter)
+			# self.wts_ = nopt.lbfgs(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad,n_iter)
+			self.wts_ = scipy.optimize.minimize(self.compute_cost_grad,w0,args=(X,y),method='L-BFGS-B',jac=True)#,options={'maxiter':n_iter})
 		
 		elif method == 'gradient_descent':
 			if not X == None and not y == None:
@@ -119,8 +123,8 @@ class Network(object):
 
 		return self
 	
-	def fprop(self,_X,wts=None):
-		'''Performs general forward propagation and stores intermediate activation values'''
+	def compute_activations(self,_X,wts=None):
+		'''Performs forward propagation and computes and stores intermediate activation values'''
 		
 		if not wts:
 			wts = self.wts_
@@ -135,14 +139,22 @@ class Network(object):
 
 	# the following methods are 'conveninence' functions needed for various optimization methods that are called
 	# by the fit method 
+
+	def compute_cost_grad(self,w,_X,y):
+		''' convenience function for scipy.optimize.minimize() '''
+		wts = nu.reroll(w,self.n_nodes)
+		self.compute_activations(_X,wts)
+		cost = self.compute_cost(y,wts)
+		grad = self.compute_grad(_X,y,wts)
+		return cost,grad
 	
 	def loss(self,w,_X,y):
 		''' convenience loss function for batch optimization methods, e.g.,
 		fmin_cg, fmin_l_bfgs_b '''
 		
 		wts = nu.reroll(w,self.n_nodes)
-		self.fprop(_X,wts)
-		E = self.cost(y,wts)
+		self.compute_activations(_X,wts)
+		E = self.compute_cost(y,wts)
 		
 		return E
 
@@ -151,7 +163,7 @@ class Network(object):
 		fmin_cg, fmin_l_bfgs_b '''
 		
 		wts = nu.reroll(w,self.n_nodes)
-		grad = self.bprop(_X,y,wts)
+		grad = self.compute_grad(_X,y,wts)
 		dE = nu.unroll(grad)
 		
 		return dE
@@ -162,10 +174,10 @@ class Network(object):
 		
 		if not wts:
 			wts = self.wts_
-		self.fprop(_X,wts)
-		dE = self.bprop(_X,y,wts)
+		self.compute_activations(_X,wts)
+		dE = self.compute_grad(_X,y,wts)
 		
-		return self.bprop(_X,y,wts)
+		return self.compute_grad(_X,y,wts)
 
 	def reset(self,method='alt_random'):
 		''' resets the weights of the network - useful for re-use'''

@@ -19,7 +19,7 @@ class Autoencoder(NeuralNetworkCore.Network):
 		self.rho = rho # activation constraint
 		self.beta = beta # sparsity coefficient
 
-	def cost(self,y,wts=None):
+	def compute_cost(self,y,wts=None):
 		'''Computes the squared-loss error for autoencoders'''	
 		
 		if not wts:
@@ -34,7 +34,7 @@ class Autoencoder(NeuralNetworkCore.Network):
 		E = main_cost + decay_cost + sparsity_cost
 		return E
 
-	def bprop(self,_X,y,wts=None):
+	def compute_grad(self,_X,y,wts=None):
 		'''Performs back-proparation to compute the gradients with respect to the weights'''				
 		if not wts:
 			wts = self.wts_
@@ -80,7 +80,7 @@ class Autoencoder(NeuralNetworkCore.Network):
 		
 		m = X.shape[1]
 		X = np.append(np.ones([1,m]),X,axis=0)
-		self.fprop(X)
+		self.compute_activations(X)
 		X_t = self.act[0][1:]
 		X_r = self.act[1]
 		
