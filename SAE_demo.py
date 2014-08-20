@@ -87,7 +87,7 @@ if __name__ == '__main__':
 	
 	mat_file = '/home/avasbr/datasets/IMAGES.mat'
 	I = load_images(mat_file)
-	n = 1000
+	n = 10000
 	X = sample_images(I,n=n)
 
 	d = X.shape[0] # input dimension
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 	beta = 3
 	rho = 0.01
 	method = 'L-BFGS'
-	
+	n_iter = 400
 	print 'Sparse autoencoder applied to textured data\n'
 
 	print 'Data:'
@@ -108,13 +108,13 @@ if __name__ == '__main__':
 	print 'Input feature size:',d
 	print 'Decay term:',decay
 	print 'Sparsity term:',rho
-	print 'Beta:',beta,'\n'
-	print 'Optimization method:',method
+	print 'Beta:',beta
+	print 'Optimization method:',method,'\n'
 
 	print 'Applying a sparse autoencoder to the data...'
 
 	sae = ae.Autoencoder(d=d,n_hid=n_hid,decay=decay,beta=beta,rho=rho)
-	sae.fit(X,method='L-BFGS')
+	sae.fit(X,method='L-BFGS',n_iter=n_iter)
 	X_r = sae.transform(X,'reconstruct')
 	X_max = sae.compute_max_activations()
 

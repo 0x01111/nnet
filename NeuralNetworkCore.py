@@ -93,14 +93,14 @@ class Network(object):
 			X = np.vstack((np.ones([1,m]),X))
 
 		w0 = nu.unroll(self.wts_)
-		print type(w0)
 		if method == 'conjugate_gradient':
 			self.compute_activations(X)
 			self.wts_ = nopt.conjugate_gradient(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad,n_iter)
 		
 		elif method == 'L-BFGS':
-			# self.wts_ = nopt.lbfgs(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad,n_iter)
-			self.wts_ = scipy.optimize.minimize(self.compute_cost_grad,w0,args=(X,y),method='L-BFGS-B',jac=True)#,options={'maxiter':n_iter})
+			self.wts_ = nopt.lbfgs(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad,n_iter)
+			# opt = scipy.optimize.minimize(self.compute_cost_grad,w0,args=(X,y),method='L-BFGS-B',jac=True,options={'maxiter':n_iter})
+			# self.wts_ = nu.reroll(opt.x,self.n_nodes)
 		
 		elif method == 'gradient_descent':
 			if not X == None and not y == None:
@@ -145,7 +145,8 @@ class Network(object):
 		wts = nu.reroll(w,self.n_nodes)
 		self.compute_activations(_X,wts)
 		cost = self.compute_cost(y,wts)
-		grad = self.compute_grad(_X,y,wts)
+		grad = nu.unroll(self.compute_grad(_X,y,wts))
+
 		return cost,grad
 	
 	def loss(self,w,_X,y):
