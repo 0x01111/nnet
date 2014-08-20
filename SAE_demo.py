@@ -85,7 +85,7 @@ def show_reconstruction(X,X_r,idx,w=8,h=8):
 
 if __name__ == '__main__':
 	
-	mat_file = '/home/avasbr/datasets/IMAGES.mat'
+	mat_file = '/home/bhargav/datasets/image_patches/IMAGES.mat'
 	I = load_images(mat_file)
 	n = 10000
 	X = sample_images(I,n=n)
