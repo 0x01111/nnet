@@ -85,7 +85,7 @@ def show_reconstruction(X,X_r,idx,w=8,h=8):
 
 if __name__ == '__main__':
 	
-	mat_file = '/home/bhargav/datasets/image_patches/IMAGES.mat'
+	mat_file = '/home/avasbr/datasets/IMAGES.mat'
 	I = load_images(mat_file)
 	n = 10000
 	X = sample_images(I,n=n)
@@ -109,7 +109,8 @@ if __name__ == '__main__':
 	print 'Decay term:',decay
 	print 'Sparsity term:',rho
 	print 'Beta:',beta
-	print 'Optimization method:',method,'\n'
+	print 'Optimization method:',method
+	print 'Max iterations: ',n_iter,'\n'
 
 	print 'Applying a sparse autoencoder to the data...'
 

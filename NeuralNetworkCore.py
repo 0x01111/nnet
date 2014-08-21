@@ -95,9 +95,8 @@ class Network(object):
 		'''
 		if not X == None:
 			m = X.shape[1]
-			X = np.vstack((np.ones([1,m]),X))
 
-		w0 = nu.unroll(self.wts_)
+		w0 = nu.unroll(self.wts_,self.bias_)
 		if method == 'conjugate_gradient':
 			self.compute_activations(X)
 			self.wts_ = nopt.conjugate_gradient(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad,n_iter)
@@ -105,7 +104,7 @@ class Network(object):
 		elif method == 'L-BFGS':
 			# self.wts_ = nopt.lbfgs(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad,n_iter)
 			opt = scipy.optimize.minimize(self.compute_cost_grad,w0,args=(X,y),method='L-BFGS-B',jac=True,options={'maxiter':n_iter})
-			self.wts_ = nu.reroll(opt.x,self.n_nodes)
+			self.wts_,self.bias_ = nu.reroll(opt.x,self.n_nodes)
 		
 		elif method == 'gradient_descent':
 			if not X == None and not y == None:
@@ -145,13 +144,13 @@ class Network(object):
 	# the following methods are 'conveninence' functions needed for various optimization methods that are called
 	# by the fit method 
 
-	def compute_cost_grad(self,w,b,X,y):
+	def compute_cost_grad(self,w,X,y):
 		''' convenience function for scipy.optimize.minimize() '''
-		wts,bias = nu.reroll(w,self.n_nodes,b)
+		wts,bias = nu.reroll(w,self.n_nodes)
 		self.compute_activations(X,wts,bias)
 		cost = self.compute_cost(y,wts)
-		grad = nu.unroll(self.compute_grad(X,y,wts))
-
+		dE_dw,dE_db = self.compute_grad(X,y,wts)
+		grad = nu.unroll(dE_dw,dE_db)
 		return cost,grad
 
 	def update(self,X,y,wts=None):

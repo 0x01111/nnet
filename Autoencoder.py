@@ -81,15 +81,12 @@ class Autoencoder(NeuralNetworkCore.Network):
 		'''
 		
 		m = X.shape[1]
-		X = np.append(np.ones([1,m]),X,axis=0)
 		self.compute_activations(X)
-		X_t = self.act[0][1:]
-		X_r = self.act[1]
 		
 		if option == 'reduce':
-			return X_t
+			return self.act[0]
 		elif option == 'reconstruct':
-			return X_r
+			return self.act[1]
 
 	def compute_max_activations(self):
 		'''Computes the input vectors which maximize the feature detectors
