@@ -95,7 +95,7 @@ if __name__ == '__main__':
 	decay = 0.0001
 	beta = 3
 	rho = 0.01
-	method = 'L-BFGS'
+	method = 'CG'
 	n_iter = 400
 	print 'Sparse autoencoder applied to textured data\n'
 
@@ -109,12 +109,13 @@ if __name__ == '__main__':
 	print 'Decay term:',decay
 	print 'Sparsity term:',rho
 	print 'Beta:',beta
-	print 'Optimization method:',method,'\n'
+	print 'Optimization method:',method
+	print 'Max iterations:',n_iter
 
 	print 'Applying a sparse autoencoder to the data...'
 
 	sae = ae.Autoencoder(d=d,n_hid=n_hid,decay=decay,beta=beta,rho=rho)
-	sae.fit(X,method='L-BFGS',n_iter=n_iter)
+	sae.fit(X,method=method,n_iter=n_iter)
 	X_r = sae.transform(X,'reconstruct')
 	X_max = sae.compute_max_activations()
 

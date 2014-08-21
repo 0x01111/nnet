@@ -2,29 +2,6 @@ import numpy as np
 import nnetutils as nu
 from scipy.optimize import fmin_cg,fmin_l_bfgs_b
 
-def conjugate_gradient(wts,_X,y,n_nodes,loss,loss_grad,n_iter=None):
-	''' wrapper function of scipy's conjugate gradient method to accept weights as a list of 
-	neural net inter-layer weights'''
-	
-	w0 = nu.unroll(wts)
-	if not n_iter == None:
-		wf = fmin_cg(loss,w0,loss_grad,(_X,y),maxiter=n_iter)
-	else:
-		wf = fmin_cg(loss,w0,loss_grad,(_X,y))
-	return nu.reroll(wf,n_nodes)
-
-def lbfgs(wts,_X,y,n_nodes,loss,loss_grad,n_iter=None):
-	''' wrapper function of scipy's L-BFGS method to accept weights as a list of 
-	neural net inter-layer weights'''
-	
-	w0 = nu.unroll(wts)
-	if not n_iter == None:
-		res = fmin_l_bfgs_b(loss,w0,loss_grad,(_X,y),maxiter=n_iter)
-	else:
-		res = fmin_l_bfgs_b(loss,w0,loss_grad,(_X,y))
-		
-	return nu.reroll(res[0],n_nodes)
-
 def gradient_descent(wts,update,_X=None, y=None,x_data=None,n_iter=1000,learn_rate=0.35):
 	'''Simple, stochastic gradient descent
 	

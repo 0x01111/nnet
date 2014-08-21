@@ -64,7 +64,7 @@ class Network(object):
 		else:
 			self.wts_ = wts
 
-	def fit(self,X=None,y=None,x_data=None,method='L-BFGS',n_iter=None,learn_rate=0.75,alpha=0.9):
+	def fit(self,X=None,y=None,x_data=None,method='L-BFGS-B',n_iter=1000,learn_rate=0.75,alpha=0.9):
 		'''Fits the weights of the neural network
 
 		Parameters:
@@ -93,14 +93,13 @@ class Network(object):
 			X = np.vstack((np.ones([1,m]),X))
 
 		w0 = nu.unroll(self.wts_)
-		if method == 'conjugate_gradient':
-			self.compute_activations(X)
-			self.wts_ = nopt.conjugate_gradient(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad,n_iter)
+		if method == 'CG':
+			wf = scipy.optimize.minimize(self.compute_cost_grad,w0,args=(X,y),method='CG',jac=True,options={'maxiter':n_iter})
+			self.wts_ = nu.reroll(wf.x,self.n_nodes)
 		
-		elif method == 'L-BFGS':
-			self.wts_ = nopt.lbfgs(self.wts_, X, y, self.n_nodes, self.loss, self.loss_grad,n_iter)
-			# opt = scipy.optimize.minimize(self.compute_cost_grad,w0,args=(X,y),method='L-BFGS-B',jac=True,options={'maxiter':n_iter})
-			# self.wts_ = nu.reroll(opt.x,self.n_nodes)
+		elif method == 'L-BFGS-B':
+			wf = scipy.optimize.minimize(self.compute_cost_grad,w0,args=(X,y),method='L-BFGS-B',jac=True,options={'maxiter':n_iter})
+			self.wts_ = nu.reroll(wf.x,self.n_nodes)
 		
 		elif method == 'gradient_descent':
 			if not X == None and not y == None:
@@ -128,13 +127,13 @@ class Network(object):
 		
 		if not wts:
 			wts = self.wts_
-
 		m = _X.shape[1] # number of training cases
+		ones = np.ones([1,m]) # a row of ones gets appended often, make just once
 		self.act[0] = self.activ[0](np.dot(wts[0].T,_X)) # use the first data matrix to compute the first activation
 		if len(wts) > 1: # wts = 1 refers to softmax regression
-			self.act[0] = np.vstack((np.ones([1,m]),self.act[0]))
+			self.act[0] = np.vstack((ones,self.act[0]))
 			for i,w in enumerate(wts[1:-1]):
-				self.act[i+1] = np.vstack((np.ones([1,m]),self.activ[i+1](np.dot(w.T,self.act[i])))) # sigmoid activations
+				self.act[i+1] = np.vstack((ones,self.activ[i+1](np.dot(w.T,self.act[i])))) # sigmoid activations
 			self.act[-1] = self.activ[-1](np.dot(wts[-1].T,self.act[-2]))
 
 	# the following methods are 'conveninence' functions needed for various optimization methods that are called
@@ -149,27 +148,7 @@ class Network(object):
 
 		return cost,grad
 	
-	def loss(self,w,_X,y):
-		''' convenience loss function for batch optimization methods, e.g.,
-		fmin_cg, fmin_l_bfgs_b '''
-		
-		wts = nu.reroll(w,self.n_nodes)
-		self.compute_activations(_X,wts)
-		E = self.compute_cost(y,wts)
-		
-		return E
-
-	def loss_grad(self,w,_X,y):
-		''' convenience grad function for batch optimization methods, e.g., 
-		fmin_cg, fmin_l_bfgs_b '''
-		
-		wts = nu.reroll(w,self.n_nodes)
-		grad = self.compute_grad(_X,y,wts)
-		dE = nu.unroll(grad)
-		
-		return dE
-
-	def update(self,_X,y,wts=None):
+	def update_network(self,_X,y,wts=None):
 		''' convenience function for mini-batch optimization methods, e.g., 
 		gradient_descent, momentum, improved_momentum'''
 		

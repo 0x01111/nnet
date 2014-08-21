@@ -8,7 +8,7 @@ import Autoencoder as ae
 import matplotlib.pyplot as plt
 
 # define the paths
-train_img_path = '/home/bhargav/datasets/MNIST/train-images.idx3-ubyte'
+train_img_path = '/home/avasbr/datasets/MNIST/train-images.idx3-ubyte'
 
 # convert the raw images into feature vectors
 num_img = 10000
@@ -23,7 +23,7 @@ decay = 0.003
 beta = 3
 rho = 0.1
 n_iter = 400
-method = 'L-BFGS'
+method = 'L-BFGS-B'
 
 print 'Sparse Autoencoder applied to MNIST data\n'
 
@@ -52,6 +52,7 @@ def visualize_image_bases(X_max,n_hid,w=28,h=28):
 	for i in range(n_hid):
 		plt.subplot(14,14,i)
 		curr_img = X_max[:,i].reshape(w,h)
+		curr_img /= 1.*np.max(curr_img) # for consistency
 		plt.imshow(curr_img,cmap='gray',interpolation='none')
 
 visualize_image_bases(X_max, n_hid)
