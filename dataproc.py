@@ -7,6 +7,15 @@ def read_csv_file(csv_file):
 	''' reads a csv file '''
 	return np.genfromtxt(csv_file,delimiter=",")
 
+def compute_conf_mat(k,pred,true):
+	''' Returns the confusion matrix given the predicted and true values'''
+	conf_mat = np.zeros((k,k))
+	for p,t in enumerate(pred,true):
+		conf_mat[p,t] += 1
+	
+	return conf_mat
+
+
 def normalize_range(X):
 	''' Given a data matrix of continuous values, puts values into similar ranges '''
 	mu = np.mean(X,axis=1)
@@ -77,6 +86,3 @@ def cross_val_idx(m,k=10):
 		val_idx = idx[i*num_per_fold:(i+1)*num_per_fold]
 		tr_idx = np.setdiff1d(idx,val_idx)
 		yield tr_idx,val_idx
-
-
-	    

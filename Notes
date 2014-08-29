@@ -12,6 +12,7 @@ Backlog (major items):
 - add documentation for demo
 - write a display function in nnetutils which prints out stuff
 - Consider writing a 'stacked autoencoder' class - OR! maybe add it directly to the autoencoder class? if you give it an array of hidden nodes, it will just train the deep network in a greedy, layer-wise manner? might be promising...
+- Change the name of the DeepAutoencoderClassifier - it doesn't need to necessarily be a deep network. Also change the name of the variable 'sae_decay', as it doesn't need to be sparse.
 
 Ongoing:
 --------

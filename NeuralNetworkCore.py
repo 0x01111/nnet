@@ -45,7 +45,7 @@ class Network(object):
 			# standard random initialization for neural network weights
 			if method=='random':
 				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
-					self.wts_[i] = 0.01*np.random.rand(n1+1,n2)
+					self.wts_[i] = 0.005*np.random.rand(n1+1,n2)
 
 			# andrew ng's suggested method in the UFLDL tutorial
 			elif method=='alt_random':
