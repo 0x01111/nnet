@@ -13,6 +13,7 @@ class Autoencoder(NeuralNetworkCore.Network):
 
 		# set the parameters of the superclass
 		NeuralNetworkCore.Network.__init__(self,d=d,k=d,n_hid=[n_hid])
+		self.set_weights(method='alt_random')
 
 		# set hyperparameters
 		self.decay = decay # regularization coefficient

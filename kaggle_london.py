@@ -2,6 +2,7 @@ import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
 import dataproc as dp
+import Autoencoder as ae
 import SoftmaxClassifier as scl
 
 # read in the data
@@ -17,54 +18,57 @@ y = np.zeros([2,targets.size])
 for idx,target in enumerate(targets):
 	y[target,idx] = 1
 
-# create training,validation, and test sets from our available labeled dataset	
-idx = dp.split_train_validation_test(X,[0.6,0.2,0.2]) # randomized split
-# training
-X_tr = X[:,idx[0]]
-y_tr = y[:,idx[0]]
-# validation
-X_val = X[:,idx[1]]
-y_val = y[:,idx[1]]
-# testing
-X_te = X[:,idx[2]]
-y_te = y[:,idx[2]]
+d,m = X.shape
+k = y.shape[0]
 
-d = X_tr.shape[0]
-k = y_tr.shape[0]
-m_tr = X_tr.shape[1]
-m_te = X_te.shape[1]
 
-# parameters of the neural network
-n_hid = [25]
-decay = 0.0001
-method = 'L-BFGS-B'
-n_iter = 10000
+# print 'K-fold Cross-validation tests\n'
 
-print 'Training a simple softmax classifier on kaggle london\n'
+# n_hid = [25]
+# decay_terms = [1,0.1,0.001,0.0001,0.00001,0.0]
 
-print 'Data:'
-print '-----'
-print 'Number of samples for training:',m_tr
-print 'Number of samples for testing:',m_te,'\n'
+# for decay in decay_terms:
+# 	cv_err = []
+# 	for tr_idx,val_idx in dp.cross_val_idx(m):
+# 		nnet = scl.SoftmaxClassifier(d=d,k=k,n_hid=n_hid,decay=decay) # create a new classifier for each iteration of CV
+# 		nnet.fit(X[:,tr_idx],y[:,tr_idx],method=method,n_iter=n_iter)
+# 		pred,mce = nnet.predict(X[:,val_idx],y[:,val_idx])
+# 		cv_err.append(mce)
+# 	avg_err = 1.*sum(cv_err)/len(cv_err)
+# 	print 'Mean error for decay = ',decay,':',100.*(avg_err),'%'
 
-print 'Parameters:'
-print '-----------'
-print 'Input feature size:',d
-print 'Number of hidden units:',n_hid
-print 'Decay term:',decay
-print 'Optimization method:',method
-print 'Max iterations:',n_iter,'\n'
+# decay = 1e-5
+# n_hids = [10,15,20,25,30,35,40,45,50]
+# for n_hid in n_hids:
+# 	cv_err = []
+# 	for tr_idx,val_idx in dp.cross_val_idx(m):
+# 		nnet = scl.SoftmaxClassifier(d=d,k=k,n_hid=[n_hid],decay=decay) # create a new classifier for each iteration of CV
+# 		nnet.fit(X[:,tr_idx],y[:,tr_idx],method=method,n_iter=n_iter)
+# 		pred,mce = nnet.predict(X[:,val_idx],y[:,val_idx])
+# 		cv_err.append(mce)
+# 	avg_err = 1.*sum(cv_err)/len(cv_err)
 
-nnet = scl.SoftmaxClassifier(d=d,k=k,n_hid=n_hid,decay=decay) 
-print 'Training...\n'
-nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter)
-pred,mce_te = nnet.predict(X_te,y_te)
+# 	print 'Mean error for number of hidden units = ',n_hid,':',100.*(avg_err),'%'
 
-print 'Performance:'
-print '------------'
-print 'Accuracy:',100.*(1-mce_te),'%'
+# print 'Test 1: Training a simple softmax classifier on raw kaggle london data'
 
-# print 'Training a softmax classifier on learned sparse autoencoder features\n'
+# # neural network settings
+# decay = 1e-5
+# n_hid = [40]
+# method = 'L-BFGS-B'
+# n_iter = 10000
+
+
+
+# # training
+# X_tr = X[:,tr_idx]
+# y_tr = y[:,tr_idx]
+# m_tr = X_tr.shape[1]
+
+# # testing
+# X_te = X[:,te_idx]
+# y_te = y[:,te_idx]
+# m_te = X_te.shape[1]
 
 # print 'Data:'
 # print '-----'
@@ -74,6 +78,7 @@ print 'Accuracy:',100.*(1-mce_te),'%'
 # print 'Parameters:'
 # print '-----------'
 # print 'Input feature size:',d
+# print 'Output size',k
 # print 'Number of hidden units:',n_hid
 # print 'Decay term:',decay
 # print 'Optimization method:',method
@@ -87,5 +92,64 @@ print 'Accuracy:',100.*(1-mce_te),'%'
 # print 'Performance:'
 # print '------------'
 # print 'Accuracy:',100.*(1-mce_te),'%'
+
+print 'Training a softmax classifier on learned features via Sparse autoencoders'
+
+# Autoencoder parameters
+sae_decay = 1e-5
+scl_decay = 1e-5
+sae_hid = 100
+scl_hid = []
+rho = 0.1
+beta = 2
+method = 'L-BFGS-B'
+n_iter = 1000
+
+# train a sparse autoencoder
+sae_net = ae.Autoencoder(d=d,n_hid=sae_hid,decay=sae_decay,beta=beta,rho=rho)
+sae_net.fit(X,method=method,n_iter=n_iter) # fits a sparse autoencoder 
+
+# transform the data
+X_t = sae_net.transform(X)
+
+# compute cross-validation statistics
+cv_err = []
+for tr_idx,val_idx in dp.cross_val_idx(m):
+	scl_net = scl.SoftmaxClassifier(d=sae_hid,k=k,n_hid=scl_hid,decay=scl_decay) # create a new classifier for each iteration of CV
+	scl_net.fit(X_t[:,tr_idx],y[:,tr_idx],method=method,n_iter=n_iter)
+	pred,mce = scl_net.predict(X_t[:,val_idx],y[:,val_idx])
+	cv_err.append(mce)
+avg_err = 1.*sum(cv_err)/len(cv_err)
+print 'Cross-validation error:',100.*(avg_err),'%'
+
+# print 'Training a network with layer-wise pre-training'
+
+# # Autoencoder parameters
+# sae_decay = 1e-5
+# scl_decay = 1e-5
+# sae_hid = 50
+# scl_hid = []
+# rho = 0.1
+# beta = 2
+# method = 'L-BFGS-B'
+# n_iter = 1000
+# sae_net = ae.Autoencoder(d=d,n_hid=sae_hid,decay=sae_decay,beta=beta,rho=rho)
+# sae_net.set_weights(method='random')
+# sae_net.fit(X,method=method,n_iter=n_iter) # fits a sparse autoencoder 
+
+# # transform the data
+# X_t = sae_net.transform(X)
+# X_tr = X_t[:,tr_idx]
+# y_tr = y[:,tr_idx]
+# X_te = X_t[:,te_idx]
+# y_te = y[:,te_idx]
+
+# scl_net = scl.SoftmaxClassifier(d=sae_hid,k=k,n_hid=scl_hid,decay=scl_decay)
+# scl_net.fit(X_tr,y_tr,method=method,n_iter=n_iter)
+# pred,mce = scl_net.predict(X_te,y_te)
+
+# print 'Performance:'
+# print '------------'
+# print 'Accuracy:',100.*(1-mce),'%'
 
 

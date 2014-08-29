@@ -136,7 +136,6 @@ def momentum(wts,update,_X=None, y=None,x_data=None,n_iter=1000,learn_rate=0.5,a
 	wts: updated weights
 	
 	'''	
-	
 	accum_grad_wts = [np.zeros(w.shape) for w in wts] # accumulated gradient
 
 	# full-batch gradient descent with momentum

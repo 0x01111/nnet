@@ -13,43 +13,48 @@ def normalize_range(X):
 	s = np.max(X,axis=1) - np.min(X,axis=1)
 	return (X - np.reshape(mu,(mu.size,1)))/np.reshape(s,(s.size,1))
 
-def get_subset_idx(idx,n,method=None):
-	''' Returns a percentage or number of indices of the provided data ''' 
+#TODO: these need some serious debugging, DO NOT USE
+# def get_subset_idx(idx,n,method=None):
+# 	''' Returns a percentage or number of indices of the provided data ''' 
 	
-	N = len(idx)
-	if method=="random":
-		idx = np.random.permutation(N)
+# 	N = len(idx)
+# 	if method=="random":
+# 		idx = np.random.permutation(N)
 
-	if n > N:
-		raise ValueError("%d exceeds the number of instances, %d" %(n,N))
+# 	if n > N:
+# 		raise ValueError("%d exceeds the number of instances, %d" %(n,N))
 
-	# accounts for both a percentage or actual number 
-	if n <= 1.0:
-		return idx[:int(np.floor(n*N))]
-	else:
-		return idx[:n]
+# 	# accounts for both a percentage or actual number 
+# 	if n <= 1.0:
+# 		return np.array(idx[:int(np.floor(n*N))])
+# 	return np.array(idx[:n])
 
-def split_train_validation_test(X,split,method=None):
-	''' Returns a list of lists containing disjoint indices of the data, split according to the
-	elements in 'split'. For example, [0.6, 0.2, 0.2] returns a 60/20/20 split of the data '''	
+# def split_train_validation_test(X,split,method=None):
+# 	''' Returns a list of lists containing disjoint indices of the data, split according to the
+# 	elements in 'split'. For example, [0.6, 0.2, 0.2] returns a 60/20/20 split of the data '''	
 	
-	N = np.shape(X)[1]
-	idx = range(N)
-	sidx = []
-	modifier = 1.0
-	for s in split:
-		modifier = 1.0*N/len(idx) # calculates the new percentage for the remainder
-		thisIdx = get_subset_idx(idx,modifier*s,method)
-		sidx.append(thisIdx)
-		idx = np.setdiff1d(idx,thisIdx)
-	return sidx
+# 	# there's gotta be a more elegant way to do this...
+# 	try:
+# 		d,m = X.shape
+# 	except ValueError:
+# 		m = X.shape[0]
+# 		d = 1
+# 	idx = range(m)
+# 	sidx = []
+# 	modifier = 1.0
+# 	for s in split:
+# 		modifier = 1.0*m/len(idx) # calculates the new percentage for the remainder
+# 		this_idx = get_subset_idx(idx,modifier*s,method)
+# 		sidx.append(this_idx)
+# 		idx = np.setdiff1d(idx,this_idx)
+# 	return sidx
 
 def shuffle_data(X):
 	''' Shuffles data '''
 	return X[:,get_subset_idx(X,1.0)]
 
 def cross_val_idx(m,k=10):
-	'''Given the total number of samples, creates training and validation
+	'''Given the total number of samples, generates training and validation
 	indices to use for cross-validation
 	
 	Parameters
@@ -66,14 +71,12 @@ def cross_val_idx(m,k=10):
 	val_idx: validation indices
 			 list of int lists
 	'''
-	train_idx = [[None] for i in range(k)]
-	val_idx = [[None] for i in range(k)]
 	num_per_fold = m/k
-	idx = list(np.random.permutation(m))
+	idx = np.random.permutation(m)
 	for i in range(k):
-		val_idx[i] = idx[i*num_per_fold:(i+1)*num_per_fold]
-		train_idx[i] = list(set(idx)-set(val_idx[i]))
+		val_idx = idx[i*num_per_fold:(i+1)*num_per_fold]
+		tr_idx = np.setdiff1d(idx,val_idx)
+		yield tr_idx,val_idx
 
-	return train_idx,val_idx
 
 	    
