@@ -6,30 +6,41 @@ import Autoencoder as ae
 import SoftmaxClassifier as scl
 import DeepAutoencoderClassifier as dac
 
-# read in the data
-path = '/home/avasbr/Desktop'
-train_data_path = path+'/train.csv'
-train_label_path = path+'/trainLabels.csv'
-test_data_path = path+'/test.csv'
-
-X = dp.read_csv_file(train_data_path).T
-# X = dp.normalize_range(X) # normalize the range for everything
-targets = dp.read_csv_file(train_label_path)
-y = np.zeros([2,targets.size])
-for idx,target in enumerate(targets):
-	y[target,idx] = 1
-
-d,m = X.shape
-k = y.shape[0]
+path='/home/avasbr/Desktop'
+X,y,d,k,m = dp.load_london_dataset(path)
 
 print 'Data characteristics:'
 print '---------------------'
 print 'Input size:',d
-print 'Output size',k
+print 'Output size:',k
 print 'Number of instances:',m
 print 'Number of positive (1) examples:',np.sum(y,axis=1)[1]
-print 'Number of negative (0) examples:',np.sum(y,axis=1)[0]
+print 'Number of negative (0) examples:',np.sum(y,axis=1)[0],'\n'
 
+print 'Test 1: Simple logistic regression benchmark'
+print '--------------------------------------------\n'
+
+# parameters
+n_hid = []
+decay = 1e-5
+method = 'L-BFGS-B'
+n_iter = 1000
+
+print 'Parameters:'
+print 'decay:',decay
+print 'method:',method
+print 'number of iterations:',n_iter
+
+cv_err = []
+for idx,(tr_idx,val_idx) in enumerate(dp.cross_val_idx(m)):
+	log_reg = scl.SoftmaxClassifier(d=d,k=k,n_hid=[],decay=0.0) # softmax classifier with no hidden units = logistic regression
+	log_reg.fit(X[:,tr_idx],y[:,tr_idx],method=method,n_iter=n_iter)
+	pred,mce = log_reg.predict(X[:,val_idx],y[:,val_idx])
+	cv_err.append(mce)
+	print 'Iteration',idx+1,'error:',100*mce,'%'
+avg_err = 1.*sum(cv_err)/len(cv_err)
+
+print 'Average Cross-validation Error:',100.*(avg_err),'%'
 
 # print 'K-fold Cross-validation tests\n'
 
@@ -129,26 +140,26 @@ print 'Number of negative (0) examples:',np.sum(y,axis=1)[0]
 # avg_err = 1.*sum(cv_err)/len(cv_err)
 # print 'Cross-validation error:',100.*(avg_err),'%'
 
-print 'Training a network with layer-wise pre-training'
+# print 'Training a network with layer-wise pre-training'
 
-# Autoencoder parameters
-sae_decay = 1e-5
-scl_decay = 1e-5
-n_hid = [200]
-rho = 0.1
-beta = 3
-method = 'L-BFGS-B'
-n_iter = 5000
+# # Autoencoder parameters
+# sae_decay = 1e-5
+# scl_decay = 1e-5
+# n_hid = [200]
+# rho = 0.1
+# beta = 3
+# method = 'L-BFGS-B'
+# n_iter = 5000
 
-cv_err = []
-for idx,(tr_idx,val_idx) in enumerate(dp.cross_val_idx(m)):
-	stacked_net = dac.DeepAutoencoderClassifier(d=d,k=k,n_hid=n_hid,sae_decay=sae_decay,scl_decay=scl_decay,rho=rho,beta=beta) # create a new classifier for each iteration of CV
-	stacked_net.fit(X[:,tr_idx],y[:,tr_idx],method=method,n_iter=n_iter)
-	pred,mce = stacked_net.predict(X[:,val_idx],y[:,val_idx])
-	cv_err.append(mce)
-	print 'Iteration',idx+1,'error:',100*mce,'%'
-avg_err = 1.*sum(cv_err)/len(cv_err)
+# cv_err = []
+# for idx,(tr_idx,val_idx) in enumerate(dp.cross_val_idx(m)):
+# 	stacked_net = dac.DeepAutoencoderClassifier(d=d,k=k,n_hid=n_hid,sae_decay=sae_decay,scl_decay=scl_decay,rho=rho,beta=beta) # create a new classifier for each iteration of CV
+# 	stacked_net.fit(X[:,tr_idx],y[:,tr_idx],method=method,n_iter=n_iter)
+# 	pred,mce = stacked_net.predict(X[:,val_idx],y[:,val_idx])
+# 	cv_err.append(mce)
+# 	print 'Iteration',idx+1,'error:',100*mce,'%'
+# avg_err = 1.*sum(cv_err)/len(cv_err)
 
-print 'Average Cross-validation Error:',100.*(avg_err),'%'
+# print 'Average Cross-validation Error:',100.*(avg_err),'%'
 
 
