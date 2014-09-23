@@ -67,8 +67,8 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		-----------
 		X: data matrix
 		   numpy array, d x m
-		y: labels, if available
-		   numpy array, k x m
+		y: labels
+		   numpy array, k x m (optional)
 		
 		Returns:
 		--------

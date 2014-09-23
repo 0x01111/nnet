@@ -20,27 +20,6 @@ def normalize_range(X):
 	s = np.max(X,axis=1) - np.min(X,axis=1)
 	return (X - np.reshape(mu,(mu.size,1)))/np.reshape(s,(s.size,1))
 
-def load_london_dataset(path):
-	''' Loads the kaggle london dataset, given the path where the three files
-	train.csv, trainLabels.csv, and test.csv are found '''
-
-	# read in the data
-	train_data_path = path+'/train.csv'
-	train_label_path = path+'/trainLabels.csv'
-	test_data_path = path+'/test.csv'
-
-	X = read_csv_file(train_data_path).T
-	# X = dp.normalize_range(X) # normalize the range for everything
-	targets = read_csv_file(train_label_path)
-	y = np.zeros([2,targets.size])
-	for idx,target in enumerate(targets):
-		y[target,idx] = 1
-
-	d,m = X.shape
-	k = y.shape[0]
-
-	return X,y,d,k,m
-
 
 #TODO: these need some serious debugging, DO NOT USE
 # def get_subset_idx(idx,n,method=None):
