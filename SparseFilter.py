@@ -32,7 +32,7 @@ class SparseFilter:
 			self.wts_ = 0.005*np.random.rand(d,k)
 
 	def soft_absolute_function(self,X,wts=None):
-		return np.sqrt(self.epsilon + np.dot(self.wts_.T,X)**2)
+		return np.sqrt(self.epsilon + np.dot(self.wts_.T,X)**2) # this approximates the L1 norm
 
 	def compute_cost(self,X,wts=None):
 		''' Sparse filtering cost function '''
@@ -41,9 +41,12 @@ class SparseFilter:
 
 		act = self.soft_absolute_function(X,wts)
 		act /= np.sum(act**2,axis=1)[:,np.newaxis] # L2 normalization across examples
-		act /= np.sum(act**2,axis=0) # L2 normalization across features
+		act /= np.sum(act**2,axis=0) # L2 normalization for each example
 		
 		return np.sum(np.abs(act))
+
+	def compute_grad():
+		''' Backpropagation across sparse filter '''
 
 
 

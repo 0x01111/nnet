@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import nnetutils as nu
 import nnetoptim as nopt
 import scipy.optimize
+import pickle
 
 class Network(object):
 
@@ -160,8 +161,22 @@ class Network(object):
 
 	def reset(self,method='alt_random'):
 		''' resets the weights of the network - useful for re-use'''
-		self.weights(method=method)
+		self.set_weights(method=method)
 
+	def save_network(save_path):
+		''' serializes the model '''
+
+		f = open(save_path,'wb')
+		pickle.dump(self,f)
+		f.close()
+
+
+	def load_network(load_path):
+		''' loads a serialized neural network '''
+
+		f = open(load_path,'r')
+		return pickle.load(f)
+		
 	# Plotting function
 	# def plot_error_curve(self):
 	# 	'''Plots the error at each iteration'''
