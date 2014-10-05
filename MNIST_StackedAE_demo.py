@@ -48,7 +48,7 @@ rho = 0.1
 beta = 3
 sae_decay = 0.003
 scl_decay = 0.0001
-method = 'L-BFGS'
+method = 'L-BFGS-B'
 n_iter = 400
 
 print 'Deep autoencoders applied to MNIST data'
@@ -106,4 +106,14 @@ pred,mce_te = nnet.predict(X_te,y_te)
 
 print 'Performance:'
 print '------------'
+print 'Accuracy:',100.*(1-mce_te),'%'
+
+print 'Saving the model'
+fname = '/home/avasbr/Desktop/deepnet_softmax_network.pickle'
+nnet.save_network(fname)
+print 'Loading the model and re-testing'
+nnet = dac.DeepAutoencoderClassifier()
+nnet.load_network(fname)
+
+pred,mce_te = nnet.predict(X_te,y_te)
 print 'Accuracy:',100.*(1-mce_te),'%'

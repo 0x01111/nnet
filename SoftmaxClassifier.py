@@ -17,7 +17,6 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 
 		# set hyperparameters
 		self.decay = decay # regularization coefficient
-		self.set_weights(method='random')
 
 	def compute_cost(self,y,wts=None):
 		''' Cross-entropy: mean(-1.0*y_true*log(y_pred))'''

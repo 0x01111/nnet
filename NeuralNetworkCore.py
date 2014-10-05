@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import nnetutils as nu
 import nnetoptim as nopt
 import scipy.optimize
-import pickle
+import cPickle
 
 class Network(object):
 
@@ -19,6 +19,9 @@ class Network(object):
 		# network parameters
 		self.n_nodes = [d]+n_hid+[k] # number of nodes in each layer
 		self.act = (len(self.n_nodes)-1)*[None] # activations for each layer (except input)
+		if all(node for node in self.n_nodes): # triggers only if all values in self.nodes are not of type NoneType
+			self.set_weights(method='alt_random')
+
 
 	def set_weights(self,method='alt_random',wts=None):
 		'''Sets the weights of the neural network based on the specified method
@@ -119,6 +122,8 @@ class Network(object):
 				self.wts_ = nopt.improved_momentum(self.wts_,self.update,X,y,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)	
 			elif x_data:
 				self.wts_ = nopt.improved_momentum(self.wts_,self.update,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
+		else:
+			print 'Method does not exist dipshit, check your code'
 
 		return self
 	
@@ -163,19 +168,20 @@ class Network(object):
 		''' resets the weights of the network - useful for re-use'''
 		self.set_weights(method=method)
 
-	def save_network(save_path):
+	def save_network(self,save_path):
 		''' serializes the model '''
 
 		f = open(save_path,'wb')
-		pickle.dump(self,f)
+		cPickle.dump(self.__dict__,f,2)
 		f.close()
 
-
-	def load_network(load_path):
-		''' loads a serialized neural network '''
+	def load_network(self,load_path):
+		''' loads a serialized neural network, given a path'''
 
 		f = open(load_path,'r')
-		return pickle.load(f)
+		tmp_dict = cPickle.load(f)
+		f.close()
+		self.__dict__.update(tmp_dict)
 		
 	# Plotting function
 	# def plot_error_curve(self):

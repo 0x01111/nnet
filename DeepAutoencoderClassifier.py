@@ -21,7 +21,6 @@ class DeepAutoencoderClassifier(NeuralNetworkCore.Network):
 
 		# sets up the full network architecture
 		NeuralNetworkCore.Network.__init__(self,d=d,k=k,n_hid=n_hid)
-		self.set_weights(method='random')
 
 		# define the hyper parameters for fine-tuning
 		self.decay = scl_decay
