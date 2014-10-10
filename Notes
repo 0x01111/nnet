@@ -1,10 +1,10 @@
 Major items in this commit
 --------------------------
-- Created a new deep autoencoder class which performs pre-training and fine-tuning. Seems to work well! There is definitely a significant increase in performance after fine-tuning. Haven't written any tests for it, however...
+- Cleaned up the optimization code a little bit
+- Added the ability to save and load networks, so you don't have to re-train every time
 
 Backlog (major items):
 ----------------------
-- clean up the optimization techniques - use scipy.optimize.minimize(), and write a function that provides both cost and grad - easier to work with - this also has the added advantage of using custom optimization techniques
 - look into packing/deprecation
 - start profiling code
 - clean up the directory structure
@@ -13,6 +13,7 @@ Backlog (major items):
 - write a display function in nnetutils which prints out stuff
 - Consider writing a 'stacked autoencoder' class - OR! maybe add it directly to the autoencoder class? if you give it an array of hidden nodes, it will just train the deep network in a greedy, layer-wise manner? might be promising...
 - Change the name of the DeepAutoencoderClassifier - it doesn't need to necessarily be a deep network. Also change the name of the variable 'sae_decay', as it doesn't need to be sparse.
+- Add in sparse filtering
 
 Ongoing:
 --------
