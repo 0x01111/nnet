@@ -13,10 +13,10 @@ import Autoencoder as ae
 import DeepAutoencoderClassifier as dac
 
 # define the paths
-train_img_path = '/home/avasbr/datasets/MNIST/train-images.idx3-ubyte'
-train_lbl_path = '/home/avasbr/datasets/MNIST/train-labels.idx1-ubyte' 
-test_img_path = '/home/avasbr/datasets/MNIST/t10k-images.idx3-ubyte' 
-test_lbl_path = '/home/avasbr/datasets/MNIST/t10k-labels.idx1-ubyte'
+train_img_path = '/home/bhargav/datasets/MNIST/train-images.idx3-ubyte'
+train_lbl_path = '/home/bhargav/datasets/MNIST/train-labels.idx1-ubyte' 
+test_img_path = '/home/bhargav/datasets/MNIST/t10k-images.idx3-ubyte' 
+test_lbl_path = '/home/bhargav/datasets/MNIST/t10k-labels.idx1-ubyte'
 
 # convert the raw images into feature vectors
 train_img = idx2numpy.convert_from_file(train_img_path)

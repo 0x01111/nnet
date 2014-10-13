@@ -5,12 +5,13 @@ class SimpleTest:
 	def __init__(self,d=10,k=5):
 		self.d = d
 		self.k = k
+		self.eps = 1e-8
 	
 	def set_weights(self,method='random'):
 		'''Sets the weight matrix of the sparse filter'''
 		# standard random initialization for neural network weights
 		if method=='random':
-			self.W = np.random.rand(self.d,self.k)
+			self.W = np.random.rand(self.k,self.d)
 
 	def compute_obj(self,x,W=None):
 		''' computes the objective function as well as some intermediate 
@@ -22,17 +23,15 @@ class SimpleTest:
 		if W == None:
 			W = self.W
 
-		f = np.dot(W.T,x)
-		l2norm = np.sqrt(np.sum(f**2))
-		f_ = f/l2norm
-		return l2norm,f_,np.sum(f_)
+		F = np.dot(W,x)
+		Fs = np.sqrt(F**2+self.eps) # soft absolute function
+		L2r = np.sqrt(np.sum(Fs**2,1)) # norm across rows
+		Fsr = Fs/L2r # row normalized
+		L2c = np.sqrt(np.sum(Fsr**2),0) # norm across columns
+		Fsrc = Fsr/L2c # row and column normalized
+		return np.sum(Fsrc),L2r,Fsr,L2c,Fsrc
 
-	def compute_grad(self,l2norm,f_,x):
-		return 1./l2norm*np.outer((1-f_**2),x)
-
-	def compute_grad2(self,l2norm,f_,x):
-		''' computes the gradient of the objective function - nori-style '''
-		return 1./l2norm*np.outer(x,(1-np.sum(f_)*f_))
+	def compute_grad(self,L2r,Fsr,L2c,Fsrc):
 
 	def gradient_checking(self):
 		''' performs two-sided gradient checking to make sure the derivative
@@ -67,3 +66,14 @@ def main():
 
 if __name__ == '__main__':
 	main()
+
+
+
+
+
+
+
+
+
+
+
