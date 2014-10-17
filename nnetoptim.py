@@ -29,7 +29,7 @@ def gradient_descent(wts,update,_X=None, y=None,x_data=None,n_iter=1000,learn_ra
 	'''
 	
 	# full-batch gradient descent
-	if not _X == None and not y == None:
+	if not _X and not y:
 		for i in range(n_iter):
 			grad_wts = update(_X,y,wts)
 			wts = [w-learn_rate*g for w,g in zip(wts,grad_wts)]
@@ -77,7 +77,7 @@ def improved_momentum(wts, update, _X=None, y=None,x_data=None,n_iter=1000,learn
 	accum_grad_wts = [np.zeros(w.shape) for w in wts] # accumulated gradient
 
 	# full-batch gradient descent with improved momentum
-	if not _X == None and not y == None:		
+	if not _X and not y:		
 		for i in range(n_iter):
 
 			# take a step in the direction of the accumulated gradient first
@@ -139,7 +139,7 @@ def momentum(wts,update,_X=None, y=None,x_data=None,n_iter=1000,learn_rate=0.5,a
 	accum_grad_wts = [np.zeros(w.shape) for w in wts] # accumulated gradient
 
 	# full-batch gradient descent with momentum
-	if not _X == None and not y == None:
+	if not _X and not y:
 			
 		for i in range(n_iter):
 		

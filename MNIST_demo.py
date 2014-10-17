@@ -6,10 +6,10 @@ import numpy as np
 import SoftmaxClassifier as scl
 
 # define the paths
-train_img_path = '/home/avasbr/datasets/MNIST/train-images.idx3-ubyte'
-train_lbl_path = '/home/avasbr/datasets/MNIST/train-labels.idx1-ubyte' 
-test_img_path = '/home/avasbr/datasets/MNIST/t10k-images.idx3-ubyte' 
-test_lbl_path = '/home/avasbr/datasets/MNIST/t10k-labels.idx1-ubyte'
+train_img_path = '/home/bhargav/datasets/MNIST/train-images.idx3-ubyte'
+train_lbl_path = '/home/bhargav/datasets/MNIST/train-labels.idx1-ubyte' 
+test_img_path = '/home/bhargav/datasets/MNIST/t10k-images.idx3-ubyte' 
+test_lbl_path = '/home/bhargav/datasets/MNIST/t10k-labels.idx1-ubyte'
 
 # convert the raw images into feature vectors
 train_img = idx2numpy.convert_from_file(train_img_path)
@@ -37,9 +37,10 @@ for i,idx in enumerate(test_lbl):
 
 # Neural network initialization parameters
 n_hid = []
-decay = 0.0001
-n_iter = 400
-method = 'L-BFGS-B'
+decay = 0.01
+learn_rate = 0.1
+n_iter = 1000
+method = 'gradient_descent'
 
 print 'MNIST classification using the Softmax classifier\n'
 
@@ -60,7 +61,7 @@ print 'Setting up the softmax classifier...'
 # softmax regression if we don't provide hidden units
 nnet = scl.SoftmaxClassifier(d=d,k=k,n_hid=n_hid,decay=decay) 
 print 'Training...\n'
-nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter)
+nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter,decay=decay,learn_rate=learn_rate)
 pred,mce_te = nnet.predict(X_te,y_te)
 
 print 'Performance:'
@@ -68,7 +69,7 @@ print '------------'
 print 'Accuracy:',100.*(1-mce_te),'%'
 
 print 'Saving the model'
-fname = '/home/avasbr/Desktop/mnist_softmax_network.pickle'
+fname = '/home/bhargav/Desktop/mnist_softmax_network.pickle'
 nnet.save_network(fname)
 print 'Loading the model and re-testing'
 nnet = scl.SoftmaxClassifier()

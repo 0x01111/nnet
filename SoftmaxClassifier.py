@@ -81,7 +81,7 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		self.compute_activations(X)
 		pred = np.argmax(self.act[-1],axis=0) # only the final activation contains the 
 		
-		if y==None:
+		if y is None:
 			return pred
 		mce = 1.0-np.mean(1.0*(pred==np.argmax(y,axis=0)))		
 		return pred,mce

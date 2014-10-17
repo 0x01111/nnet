@@ -91,7 +91,7 @@ class Network(object):
 		--------
 		self.wts_	
 		'''
-		if not X == None:
+		if not X:
 			m = X.shape[1]
 			X = np.vstack((np.ones([1,m]),X))
 
@@ -105,25 +105,25 @@ class Network(object):
 			self.wts_ = nu.reroll(wf.x,self.n_nodes)
 		
 		elif method == 'gradient_descent':
-			if not X == None and not y == None:
-				self.wts_ = nopt.gradient_descent(self.wts_,self.update,X,y,n_iter=n_iter,learn_rate=learn_rate)
+			if not X and not y:
+				self.wts_ = nopt.gradient_descent(self.wts_,self.update_network,X,y,n_iter=n_iter,learn_rate=learn_rate)
 			elif x_data:
-				self.wts_ = nopt.gradient_descent(self.wts_,self.update,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate)
+				self.wts_ = nopt.gradient_descent(self.wts_,self.update_network,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate)
 
 		elif method == 'momentum':
-			if not X == None and not y == None:
-				self.wts_ = nopt.momentum(self.wts_,self.update,X,y,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
+			if not X and not y:
+				self.wts_ = nopt.momentum(self.wts_,self.update_network,X,y,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 			
 			elif x_data:
-				self.wts_ = nopt.momentum(self.wts_,self.update,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
+				self.wts_ = nopt.momentum(self.wts_,self.update_network,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 
 		elif method == 'improved_momentum':
-			if not X == None and not y == None:
-				self.wts_ = nopt.improved_momentum(self.wts_,self.update,X,y,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)	
+			if not X and not y:
+				self.wts_ = nopt.improved_momentum(self.wts_,self.update_network,X,y,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)	
 			elif x_data:
-				self.wts_ = nopt.improved_momentum(self.wts_,self.update,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
+				self.wts_ = nopt.improved_momentum(self.wts_,self.update_network,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 		else:
-			print 'Method does not exist dipshit, check your code'
+			print 'Method does not exist, check your code'
 
 		return self
 	
