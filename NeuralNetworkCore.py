@@ -3,7 +3,7 @@
 # cost functions, gradient (bprop) functions, etc should be set-up in the subclasses, because
 # these are what give rise to the variations in neural network architectures. Sparse autoencoders, 
 # RBMs, multilayer softmax nets, even logistic/softmax regression, are all essentially neural
-# networks under the hood. 
+# networks with different cost functions.
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,7 +21,6 @@ class Network(object):
 		self.act = (len(self.n_nodes)-1)*[None] # activations for each layer (except input)
 		if all(node for node in self.n_nodes): # triggers only if all values in self.nodes are not of type NoneType
 			self.set_weights(method='alt_random')
-
 
 	def set_weights(self,method='alt_random',wts=None):
 		'''Sets the weights of the neural network based on the specified method
@@ -43,13 +42,13 @@ class Network(object):
 		self.wts_
 
 		'''
-		if not wts:
+		if wts is None:
 			self.wts_ = (len(self.n_nodes)-1)*[None]
 
 			# standard random initialization for neural network weights
 			if method=='random':
 				for i,(n1,n2) in enumerate(zip(self.n_nodes[:-1],self.n_nodes[1:])):
-					self.wts_[i] = 0.005*np.random.rand(n1+1,n2)
+					self.wts_[i] = 0.0005*np.random.rand(n1+1,n2)
 
 			# andrew ng's suggested method in the UFLDL tutorial
 			elif method=='alt_random':
@@ -91,7 +90,7 @@ class Network(object):
 		--------
 		self.wts_	
 		'''
-		if not X:
+		if X is not None:
 			m = X.shape[1]
 			X = np.vstack((np.ones([1,m]),X))
 
@@ -105,22 +104,21 @@ class Network(object):
 			self.wts_ = nu.reroll(wf.x,self.n_nodes)
 		
 		elif method == 'gradient_descent':
-			if not X and not y:
+			if X is not None and y is not None:
 				self.wts_ = nopt.gradient_descent(self.wts_,self.update_network,X,y,n_iter=n_iter,learn_rate=learn_rate)
-			elif x_data:
+			elif x_data is not None:
 				self.wts_ = nopt.gradient_descent(self.wts_,self.update_network,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate)
 
 		elif method == 'momentum':
-			if not X and not y:
+			if X is not None and y is not None:
 				self.wts_ = nopt.momentum(self.wts_,self.update_network,X,y,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
-			
-			elif x_data:
+			elif x_data is not None:
 				self.wts_ = nopt.momentum(self.wts_,self.update_network,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 
 		elif method == 'improved_momentum':
-			if not X and not y:
+			if X is not None and y is not None:
 				self.wts_ = nopt.improved_momentum(self.wts_,self.update_network,X,y,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)	
-			elif x_data:
+			elif x_data is not None:
 				self.wts_ = nopt.improved_momentum(self.wts_,self.update_network,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 		else:
 			print 'Method does not exist, check your code'
@@ -130,8 +128,9 @@ class Network(object):
 	def compute_activations(self,_X,wts=None):
 		'''Performs forward propagation and computes and stores intermediate activation values'''
 		
-		if not wts:
+		if wts is None:
 			wts = self.wts_
+
 		m = _X.shape[1] # number of training cases
 		ones = np.ones([1,m]) # a row of ones gets appended often, make just once
 		self.act[0] = self.activ[0](np.dot(wts[0].T,_X)) # use the first data matrix to compute the first activation
@@ -157,12 +156,12 @@ class Network(object):
 		''' convenience function for mini-batch optimization methods, e.g., 
 		gradient_descent, momentum, improved_momentum'''
 		
-		if not wts:
+		if wts is None:
 			wts = self.wts_
 		self.compute_activations(_X,wts)
 		dE = self.compute_grad(_X,y,wts)
 		
-		return self.compute_grad(_X,y,wts)
+		return dE
 
 	def reset(self,method='alt_random'):
 		''' resets the weights of the network - useful for re-use'''

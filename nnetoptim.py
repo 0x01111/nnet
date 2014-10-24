@@ -13,8 +13,8 @@ def gradient_descent(wts,update,_X=None, y=None,x_data=None,n_iter=1000,learn_ra
 	x_data:	neural network weight gradients
 				list of numpy ndarrays
 
-	update:	update function which takes current weights and outputs the gradient
-			function
+	update:	update function which takes current weights and outputs the gradient.
+			function handle
 
 	n_iter:	number of iterations
 			int (optional, default = 1000)
@@ -29,21 +29,20 @@ def gradient_descent(wts,update,_X=None, y=None,x_data=None,n_iter=1000,learn_ra
 	'''
 	
 	# full-batch gradient descent
-	if not _X and not y:
+	if _X is not None and y is not None:
 		for i in range(n_iter):
 			grad_wts = update(_X,y,wts)
 			wts = [w-learn_rate*g for w,g in zip(wts,grad_wts)]
-
 		return wts
 		
 	# mini-batch stochastic gradient descent
+	data_gen = x_data()
 	for i in range(n_iter):
-		X,y = x_data.next() # get the next batch of data
+		X,y = data_gen.next() # get the next batch of data
 		m = X.shape[1]
 		X = np.vstack((np.ones([1,m]),X))
 		grad_wts = update(X,y,wts) # run the samples through the network
-		wts = [w-learn_rate*g for w,g in zip(wts,grad_wts)] # update the weights
-		
+		wts = [w-learn_rate*g for w,g in zip(wts,grad_wts)] # update the weights	
 	return wts
 
 def improved_momentum(wts, update, _X=None, y=None,x_data=None,n_iter=1000,learn_rate=0.35,alpha=0.9):
@@ -77,9 +76,8 @@ def improved_momentum(wts, update, _X=None, y=None,x_data=None,n_iter=1000,learn
 	accum_grad_wts = [np.zeros(w.shape) for w in wts] # accumulated gradient
 
 	# full-batch gradient descent with improved momentum
-	if not _X and not y:		
+	if _X is not None and y is not None:		
 		for i in range(n_iter):
-
 			# take a step in the direction of the accumulated gradient first
 			wts = [w + a for w,a in zip(wts,accum_grad_wts)] 
 			grad_wts = update(_X,y,wts) # evaluate the gradient at this new point
@@ -92,10 +90,11 @@ def improved_momentum(wts, update, _X=None, y=None,x_data=None,n_iter=1000,learn
 		return wts
 
 	# mini-batch stochastic gradient descent with improved momentum
+	data_gen = x_data()
 	for i in range(n_iter):
 		
 		# get the next batch of data
-		X,y = x_data.next()
+		X,y = data_gen.next()
 		m = X.shape[1]
 		X = np.vstack((np.ones([1,m]),X))
 
@@ -139,7 +138,7 @@ def momentum(wts,update,_X=None, y=None,x_data=None,n_iter=1000,learn_rate=0.5,a
 	accum_grad_wts = [np.zeros(w.shape) for w in wts] # accumulated gradient
 
 	# full-batch gradient descent with momentum
-	if not _X and not y:
+	if _X is not None and y is not None:
 			
 		for i in range(n_iter):
 		
@@ -152,10 +151,11 @@ def momentum(wts,update,_X=None, y=None,x_data=None,n_iter=1000,learn_rate=0.5,a
 		return wts
 
 	# mini-batch stochastic gradient descent with momentum
+	data_gen = x_data()
 	for i in range(n_iter):
 		
 		# get the next batch of data
-		X,y = x_data.next() 
+		X,y = data_gen.next() 
 		m = X.shape[1]
 		X = np.vstack((np.ones([1,m]),X))
 		grad_wts = update(X,y,wts) # evaluate the gradient at the current point

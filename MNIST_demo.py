@@ -6,6 +6,7 @@ import numpy as np
 import SoftmaxClassifier as scl
 
 # define the paths
+print 'Loading data...'
 train_img_path = '/home/bhargav/datasets/MNIST/train-images.idx3-ubyte'
 train_lbl_path = '/home/bhargav/datasets/MNIST/train-labels.idx1-ubyte' 
 test_img_path = '/home/bhargav/datasets/MNIST/t10k-images.idx3-ubyte' 
@@ -37,10 +38,19 @@ for i,idx in enumerate(test_lbl):
 
 # Neural network initialization parameters
 n_hid = []
-decay = 0.01
-learn_rate = 0.1
-n_iter = 1000
+decay = 0.0
+learn_rate = 0.13
+n_iter = 5000
 method = 'gradient_descent'
+
+# for gradient descent-based
+def x_data():
+	batch_size = 600
+	idx = 0
+	while True: # cyclic generation
+		idx_range = range((idx*batch_size)%m_tr,((idx+1)*batch_size-1)%m_tr+1)
+		yield (X_tr[:,idx_range],y_tr[:,idx_range])
+		idx += 1
 
 print 'MNIST classification using the Softmax classifier\n'
 
@@ -61,19 +71,19 @@ print 'Setting up the softmax classifier...'
 # softmax regression if we don't provide hidden units
 nnet = scl.SoftmaxClassifier(d=d,k=k,n_hid=n_hid,decay=decay) 
 print 'Training...\n'
-nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter,decay=decay,learn_rate=learn_rate)
+nnet.fit(x_data=x_data,method=method,n_iter=n_iter,learn_rate=learn_rate)
 pred,mce_te = nnet.predict(X_te,y_te)
 
 print 'Performance:'
 print '------------'
 print 'Accuracy:',100.*(1-mce_te),'%'
 
-print 'Saving the model'
-fname = '/home/bhargav/Desktop/mnist_softmax_network.pickle'
-nnet.save_network(fname)
-print 'Loading the model and re-testing'
-nnet = scl.SoftmaxClassifier()
-nnet.load_network(fname)
+# print 'Saving the model'
+# fname = '/home/bhargav/Desktop/mnist_softmax_network.pickle'
+# nnet.save_network(fname)
+# print 'Loading the model and re-testing'
+# nnet = scl.SoftmaxClassifier()
+# nnet.load_network(fname)
 
-pred,mce_te = nnet.predict(X_te,y_te)
-print 'Accuracy:',100.*(1-mce_te),'%'
+# pred,mce_te = nnet.predict(X_te,y_te)
+# print 'Accuracy:',100.*(1-mce_te),'%'

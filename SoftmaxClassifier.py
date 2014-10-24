@@ -21,7 +21,7 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 	def compute_cost(self,y,wts=None):
 		''' Cross-entropy: mean(-1.0*y_true*log(y_pred))'''
 		
-		if not wts:
+		if wts is None:
 			wts = self.wts_
 
 		#  E = 1/N*sum(-y*log(p)) - negative log probability of the right answer
@@ -32,7 +32,7 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 	def compute_grad(self,_X,y,wts=None):
 		'''Back-propagation for L2-regularized cross-entropy cost function'''
 
-		if not wts:
+		if wts is None:
 			wts = self.wts_
 
 		# reversing the lists makes it easier 					
