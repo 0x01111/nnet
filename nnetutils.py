@@ -24,11 +24,11 @@ def sigmoid(z):
 	'''Computes the element-wise logit of z'''
 	return 1./(1. + np.exp(-1.*z))
 
-def unroll(wts):
+def unroll(wts,bs):
 	'''Flattens matrices and concatenates to a vector '''
 	v = np.array([])
-	for w in wts:
-		v = np.concatenate((v,w.flatten()))
+	for w,b in zip(wts,bs):
+		v = np.concatenate((v,w.flatten(),b.flatten()))
 	return v
 
 def reroll(v,n_nodes):
@@ -36,12 +36,16 @@ def reroll(v,n_nodes):
 
 	idx = 0
 	r_wts = []
-	for row,col in zip(n_nodes[:-1],n_nodes[1:]):
-		w_size = (row+1)*col
-		r_wts.append(np.reshape(v[idx:idx+w_size],(row+1,col)))
+	r_bs = []
+	for col,row in zip(n_nodes[:-1],n_nodes[1:]):
+		w_size = row*col
+		b_size = col
+		r_wts.append(np.reshape(v[idx:idx+w_size],(row,col)))
 		idx += w_size
+		r_bs.append(np.reshape(v[idx:idx+b_size],(col,1)))
+		idx += b_size
 	
-	return r_wts
+	return r_wts,b_wts
 
 def clamp(a,minv,maxv):
 	''' imposes a range on all values of a matrix '''

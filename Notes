@@ -5,6 +5,8 @@ Major items in this commit
 
 Backlog (major items):
 ----------------------
+- Switch everything to W,b
+- Add early stopping
 - look into packing/deprecation
 - start profiling code
 - clean up the directory structure

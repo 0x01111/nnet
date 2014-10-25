@@ -28,9 +28,6 @@ class SimpleTest:
 		return l2norm,f_,np.sum(f_)
 
 	def compute_grad(self,l2norm,f_,x):
-		return 1./l2norm*np.outer((1-f_**2),x)
-
-	def compute_grad2(self,l2norm,f_,x):
 		''' computes the gradient of the objective function - nori-style '''
 		return 1./l2norm*np.outer(x,(1-np.sum(f_)*f_))
 
@@ -40,7 +37,7 @@ class SimpleTest:
 		x = np.random.rand(self.d)
 		self.set_weights()
 		l2norm,f_,dummy = self.compute_obj(x)
-		bprop_grad = self.compute_grad2(l2norm,f_,x).flatten()
+		bprop_grad = self.compute_grad(l2norm,f_,x).flatten()
 		eps = 1e-4
 		err_tol = 1e-10
 		idxs = np.random.permutation(self.d*self.k)
