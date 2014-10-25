@@ -113,9 +113,9 @@ class Network(object):
 		
 		elif method == 'gradient_descent':
 			if X is not None and y is not None:
-				self.wts_,self.bs_ = nopt.gradient_descent(self.wts_,self.update_network,X,y,n_iter=n_iter,learn_rate=learn_rate)
+				self.wts_,self.bs_ = nopt.gradient_descent(self.wts_,self.bs_,self.update_network,X,y,n_iter=n_iter,learn_rate=learn_rate)
 			elif x_data is not None:
-				self.wts_,self.bs_ = nopt.gradient_descent(self.wts_,self.update_network,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate)
+				self.wts_,self.bs_ = nopt.gradient_descent(self.wts_,self.bs_,self.update_network,x_data=x_data,n_iter=n_iter,learn_rate=learn_rate)
 
 		elif method == 'momentum':
 			if X is not None and y is not None:
@@ -143,30 +143,32 @@ class Network(object):
 			bs = self.bs_
 
 		self.act[0] = self.activ[0](np.dot(wts[0],X) + bs[0]) # use the first data matrix to compute the first activation
-		if len(wts) > 1: # wts = 1 refers to softmax regression
+		if len(wts) > 1: # len(wts) = 1 corresponds to softmax regression
 			for i,(w,b,activ) in enumerate(wts[1:-1],bs[1:-1],self.activ[1:]):
-				self.act[i+1] = activ(np.dot(w,self.act[i]) + b # sigmoid activations
+				self.act[i+1] = activ(np.dot(w,self.act[i]) + b)
 
 	# the following methods are 'conveninence' functions needed for various optimization methods that are called
 	# by the fit method 
 
-	def compute_cost_grad(self,w,_X,y):
+	def compute_cost_grad(self,w,X,y):
 		''' convenience function for scipy.optimize.minimize() '''
 		wts = nu.reroll(w,self.n_nodes)
-		self.compute_activations(_X,wts)
+		self.compute_activations(X,wts)
 		cost = self.compute_cost(y,wts)
-		grad = nu.unroll(self.compute_grad(_X,y,wts))
+		grad = nu.unroll(self.compute_grad(X,y,wts))
 
 		return cost,grad
 	
-	def update_network(self,_X,y,wts=None):
+	def update_network(self,X,y,wts=None,bs=None):
 		''' convenience function for mini-batch optimization methods, e.g., 
 		gradient_descent, momentum, improved_momentum'''
 		
-		if wts is None:
+		if wts is None and bs is None:
 			wts = self.wts_
-		self.compute_activations(_X,wts)
-		dE = self.compute_grad(_X,y,wts)
+			bs = self.bs_
+
+		self.compute_activations(X,wts)
+		dE = self.compute_grad(X,y,wts)
 		
 		return dE
 
