@@ -144,7 +144,7 @@ class Network(object):
 
 		self.act[0] = self.activ[0](np.dot(wts[0],X) + bs[0]) # use the first data matrix to compute the first activation
 		if len(wts) > 1: # len(wts) = 1 corresponds to softmax regression
-			for i,(w,b,activ) in enumerate(wts[1:-1],bs[1:-1],self.activ[1:]):
+			for i,(w,b,activ) in enumerate(zip(wts[1:],bs[1:],self.activ[1:])):
 				self.act[i+1] = activ(np.dot(w,self.act[i]) + b)
 
 	# the following methods are 'conveninence' functions needed for various optimization methods that are called
@@ -152,10 +152,11 @@ class Network(object):
 
 	def compute_cost_grad(self,w,X,y):
 		''' convenience function for scipy.optimize.minimize() '''
-		wts = nu.reroll(w,self.n_nodes)
-		self.compute_activations(X,wts)
+		wts,bs = nu.reroll(w,self.n_nodes)
+		self.compute_activations(X,wts,bs)
 		cost = self.compute_cost(y,wts)
-		grad = nu.unroll(self.compute_grad(X,y,wts))
+		grad_w,grad_b = self.compute_grad(X,y,wts,bs)
+		grad = nu.unroll(grad_w,grad_b)
 
 		return cost,grad
 	
@@ -167,8 +168,8 @@ class Network(object):
 			wts = self.wts_
 			bs = self.bs_
 
-		self.compute_activations(X,wts)
-		dE = self.compute_grad(X,y,wts)
+		self.compute_activations(X,wts,bs)
+		dE = self.compute_grad(X,y,wts,bs)
 		
 		return dE
 

@@ -53,7 +53,7 @@ sae_decay = 0.003
 scl_decay = 0.0001
 beta = 3
 rho = 0.1
-method = 'L-BFGS'
+method = 'L-BFGS-B'
 n_iter = 400
 
 print 'Self-taught learning demo\n'

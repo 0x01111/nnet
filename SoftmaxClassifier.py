@@ -25,38 +25,41 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 			wts = self.wts_
 
 		#  E = 1/N*sum(-y*log(p)) - negative log probability of the right answer
-		E = np.mean(np.sum(-1.0*y*np.log(self.act[-1]),axis=0)) + 0.5*self.decay*sum([np.sum(w[1:]**2) for w in wts])
+		E = np.mean(np.sum(-1.0*y*np.log(self.act[-1]),axis=0)) + 0.5*self.decay*sum([np.sum(w**2) for w in wts])
 
 		return E
 
-	def compute_grad(self,_X,y,wts=None):
+	def compute_grad(self,X,y,wts=None,bs=None):
 		'''Back-propagation for L2-regularized cross-entropy cost function'''
 
-		if wts is None:
+		if wts is None and bs is None:
 			wts = self.wts_
+			bs = self.bs_
 
 		# reversing the lists makes it easier 					
 		wts = wts[::-1]
+		bs = bs[::-1]
 		act = self.act[::-1]
 
-		m = _X.shape[1]
 		dE_dW = len(wts)*[None]
-		
+		dE_db = len(bs)*[None]
+
 		# the final layer is a softmax, so calculate the derivative with respect to 
 		# the inputs to the softmax first
 		dE_dz = act[0]-y
 		
+		m = X.shape[1]
 		if len(wts)>1: # wts = 1 means there's no hidden layer = softmax regression
 			for i,a in enumerate(act[1:]):
-				dE_dW[i] = 1./m*np.dot(a,dE_dz.T)
-				dE_dW[i][1:] += self.decay*wts[i][1:]
-				dE_da = np.dot(wts[i],dE_dz)
-				dE_dz = (dE_da*a*(1-a))[1:] # no connection to the bias node
-		dE_dW[-1] = 1./m*np.dot(_X,dE_dz.T)
-		dE_dW[-1][1:] += self.decay*wts[-1][1:]
+				dE_dW[i] = 1./m*np.dot(dE_dz,a.T) + self.decay*wts[i]
+				dE_db[i] = 1./m*np.sum(dE_dz,axis=1)[:,np.newaxis]
+				dE_da = np.dot(wts[i].T,dE_dz)
+				dE_dz = dE_da*a*(1-a) # no connection to the bias node
+		dE_dW[-1] = 1./m*np.dot(dE_dz,X.T) + self.decay*wts[-1]
+		dE_db[-1] = 1./m*np.sum(dE_dz,axis=1)[:,np.newaxis]
 
 		# re-reverse and return
-		return dE_dW[::-1]
+		return dE_dW[::-1],dE_db[::-1]
 
 	def predict(self,X,y=None):
 		'''Runs forward propagation through the network to predict labels, and computes 
@@ -76,8 +79,6 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		mce: misclassification error, if labels were provided
 			 float
 		'''
-		m = X.shape[1]
-		X = np.append(np.ones([1,m]),X,axis=0)
 		self.compute_activations(X)
 		pred = np.argmax(self.act[-1],axis=0) # only the final activation contains the 
 		

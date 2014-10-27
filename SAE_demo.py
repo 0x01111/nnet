@@ -95,7 +95,7 @@ if __name__ == '__main__':
 	decay = 0.0001
 	beta = 3
 	rho = 0.01
-	method = 'CG'
+	method = 'L-BFGS-B'
 	n_iter = 400
 	print 'Sparse autoencoder applied to textured data\n'
 

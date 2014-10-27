@@ -38,14 +38,11 @@ def reroll(v,n_nodes):
 	r_wts = []
 	r_bs = []
 	for col,row in zip(n_nodes[:-1],n_nodes[1:]):
-		w_size = row*col
-		b_size = col
-		r_wts.append(np.reshape(v[idx:idx+w_size],(row,col)))
-		idx += w_size
-		r_bs.append(np.reshape(v[idx:idx+b_size],(col,1)))
-		idx += b_size
+		w_size = row*col; b_size = row
+		r_wts.append(np.reshape(v[idx:idx+w_size],(row,col))); idx += w_size
+		r_bs.append(np.reshape(v[idx:idx+b_size],(row,1))); idx += b_size
 	
-	return r_wts,b_wts
+	return r_wts,r_bs
 
 def clamp(a,minv,maxv):
 	''' imposes a range on all values of a matrix '''

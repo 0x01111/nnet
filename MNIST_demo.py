@@ -7,10 +7,10 @@ import SoftmaxClassifier as scl
 
 # define the paths
 print 'Loading data...'
-train_img_path = '/home/bhargav/datasets/MNIST/train-images.idx3-ubyte'
-train_lbl_path = '/home/bhargav/datasets/MNIST/train-labels.idx1-ubyte' 
-test_img_path = '/home/bhargav/datasets/MNIST/t10k-images.idx3-ubyte' 
-test_lbl_path = '/home/bhargav/datasets/MNIST/t10k-labels.idx1-ubyte'
+train_img_path = '/home/avasbr/datasets/MNIST/train-images.idx3-ubyte'
+train_lbl_path = '/home/avasbr/datasets/MNIST/train-labels.idx1-ubyte' 
+test_img_path = '/home/avasbr/datasets/MNIST/t10k-images.idx3-ubyte' 
+test_lbl_path = '/home/avasbr/datasets/MNIST/t10k-labels.idx1-ubyte'
 
 # convert the raw images into feature vectors
 train_img = idx2numpy.convert_from_file(train_img_path)
@@ -37,13 +37,13 @@ for i,idx in enumerate(test_lbl):
 	y_te[idx,i] = 1
 
 # Neural network initialization parameters
-n_hid = []
+n_hid = [50]
 decay = 0.0
-learn_rate = 0.13
+learn_rate = 0.35
 n_iter = 5000
 method = 'gradient_descent'
 
-# for gradient descent-based
+# for gradient descent-based optimization algorithms
 def x_data():
 	batch_size = 600
 	idx = 0
