@@ -1,0 +1,115 @@
+This document is intended to report some the results and benchmarks I obtained from 
+using my implementation of neural networks on the Stanford UFLDL exercises. Most of the
+results so far seem to agree with those reported in the tutorial. The speeds were also
+closer to those reported after linking numpy with OpenBLAS, which made the matrix 
+multiplications significantly faster (~0.2s vs ~0.06s for multiplying two dense 
+1000 x 1000 sized random matrices). So far, results are reported for:
+
+MNIST_demo.py
+STL_demo.py
+MNIST_StackedAE_demo.py
+
+1. MNIST_demo.py
+
+MNIST classification using Softmax regression
+
+Data:
+-----
+Number of samples for training: 60000
+Number of samples for testing: 10000
+
+Parameters:
+-----------
+Input feature size: 784
+Output dimension: 10
+Decay term: 0.0001
+Optimization method: L-BFGS
+Max iterations: 400
+
+Performance:
+------------
+Accuracy: 92.6%
+[Finished in 151.2s]
+
+2. STL_demo.py
+
+Self-taught learning demo
+
+Data:
+-----
+Number of samples for training: 30596
+Number of samples for testing: 15298
+
+Part 1: Softmax regression on raw pixels
+
+Parameters:
+-----------
+Input feature size: 784
+Output dimension: 5
+Decay term: 0.0001
+Optimization method: L-BFGS
+Max iterations: 400
+
+Performance:
+------------
+Accuracy: 96.8%
+
+Part 2: Softmax regression on learned features via autoencoders
+
+Parameters:
+-----------
+- Autoencoder -
+Input feature size: 784
+Number of hidden units: 200
+Decay term: 0.003
+Sparsity term: 0.01
+Beta: 3
+Optimization method: L-BFGS
+Max iterations: 400
+
+- Softmax -
+Input feature size: 200
+Output dimension: 5
+Decay term: 0.0001
+Optimization method: L-BFGS
+Max iterations: 400
+
+Performance:
+------------
+Accuracy: 98.2%
+[Finished in 1744s]
+
+3. MNIST_StackedAE_demo.py
+
+Deep autoencoders applied to MNIST data
+
+Data:
+-----
+Number of samples for training: 60000
+Number of samples for testing: 10000 
+
+Parameters:
+-----------
+Input feature size: 784
+Output dimension: 10
+Hidden units: [200, 200]
+- Autoencoder(s) -
+Sparsity term: 0.1
+Beta: 3
+Decay term: 0.003
+Optimization method: L-BFGS
+Max iterations: 400
+- Softmax -
+Decay term: 0.003
+Optimization method: L-BFGS
+Max iterations: 400 
+
+Performing greedy, layer-wise training of stacked autoencoders...
+
+Test 2: Softmax regression on learned features from stacked autoencoders
+
+Performance:
+------------
+Accuracy: 88.51 %
+[Finished in 4759.0s]
+

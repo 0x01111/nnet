@@ -1,0 +1,25 @@
+Major items in this commit
+--------------------------
+- Switched everything over to W,b
+
+Backlog (major items):
+----------------------
+- Add in the concept of an "epoch"
+- Add early stopping 
+- look into packing/deprecation and clean up directory structure
+- start profiling code
+- unit tests for demos and other functions, including gradient descent
+- add documentation for demo
+- write a display function in nnetutils which prints out stuff
+- Add in sparse filtering
+
+Ongoing:
+--------
+- Coding style
+- Design considerations
+- Application to other major datasets
+- Start adding in hyperopt methods - look into Ryan Adams paper?
+
+Thoughts/Concerns:
+-------------------
+
