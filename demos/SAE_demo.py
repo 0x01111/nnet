@@ -4,7 +4,8 @@
 import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
-import Autoencoder as ae
+from nnet import Autoencoder as ae
+from nnet.common import dataproc as dp
 
 def sample_images(I,w=8,h=8,n=10000):
 	'''Extracts n patches (flattened) of size w x h from one of the images in I
@@ -83,45 +84,37 @@ def show_reconstruction(X,X_r,idx,w=8,h=8):
 	plt.imshow(xr,cmap='gray',interpolation='none')
 	plt.title('Reconstructed patch')
 
-if __name__ == '__main__':
-	
-	mat_file = '/home/avasbr/datasets/IMAGES.mat'
-	I = load_images(mat_file)
-	n = 10000
-	X = sample_images(I,n=n)
+mat_file = '/home/avasbr/datasets/IMAGES.mat'
+I = load_images(mat_file)
+n = 10000
+X = sample_images(I,n=n)
 
-	d = X.shape[0] # input dimension
-	n_hid = 25 # number of hidden nodes
-	decay = 0.0001
-	beta = 3
-	rho = 0.01
-	method = 'L-BFGS-B'
-	n_iter = 400
-	print 'Sparse autoencoder applied to textured data\n'
+d = X.shape[0] # input dimension
 
-	print 'Data:'
-	print '------'
-	print 'Number of samples for training:',n,'\n'
+print 'Sparse autoencoder applied to textured data\n'
 
-	print 'Parameters:'
-	print '------------'
-	print 'Input feature size:',d
-	print 'Decay term:',decay
-	print 'Sparsity term:',rho
-	print 'Beta:',beta
-	print 'Optimization method:',method
-	print 'Max iterations:',n_iter
+print 'Data:'
+print '------'
+print 'Number of samples for training:',n,'\n'
 
-	print 'Applying a sparse autoencoder to the data...'
+# Define the neural network parameters
+nnet_params = {"n_hid":25,"decay":0.0001,"beta":3,"rho":0.01}
+dp.pretty_print("Autoencoder parameters",**nnet_params)
 
-	sae = ae.Autoencoder(d=d,n_hid=n_hid,decay=decay,beta=beta,rho=rho)
-	sae.fit(X,method=method,n_iter=n_iter)
-	X_r = sae.transform(X,'reconstruct')
-	X_max = sae.compute_max_activations()
+# Define the optimizer
+method = "L-BFGS-B"
+lbfgs_params = {"n_iter":400}
+dp.pretty_print("Optimization parameters",**lbfgs_params)
 
-	print 'Displaying maximum activations for hidden nodes'
-	np.savez('image_bases',X_max=X_max)
-	files = np.load('image_bases.npz')
-	X_max = files['X_max']
-	visualize_image_bases(X_max, n_hid)
-	plt.show()
+print 'Applying a sparse autoencoder to the data...'
+sae = ae.Autoencoder(d=d,**nnet_params)
+sae.fit(X,method=method,**lbfgs_params)
+X_r = sae.transform(X,'reconstruct')
+X_max = sae.compute_max_activations()
+
+print 'Displaying maximum activations for hidden nodes'
+np.savez('image_bases',X_max=X_max)
+files = np.load('image_bases.npz')
+X_max = files['X_max']
+visualize_image_bases(X_max, 25)
+plt.show()

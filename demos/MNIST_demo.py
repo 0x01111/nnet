@@ -74,7 +74,7 @@ dp.pretty_print("Optimization parameters",**grad_descent_params)
 
 print 'Setting up the softmax classifier...'
 # softmax regression if we don't provide hidden units
-nnet = scl.SoftmaxClassifier(d=d,k=k,**nnet_params) 
+nnet = scl.SoftmaxClassifier(d=d,k=k,**nnet_params)
 print 'Training...\n'
 nnet.fit(X=X_tr,y=y_tr,x_data=x_data,method=method,X_val=X_val,y_val=y_val,**grad_descent_params)
 pred,mce_te = nnet.predict(X_te,y_te)
