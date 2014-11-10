@@ -9,7 +9,7 @@ from nnet import Autoencoder as ae
 class DeepAutoencoderClassifier(NeuralNetworkCore.Network):
 
 	def __init__(self,d=None,k=None,n_hid=None,sae_decay=None,scl_decay=None,rho=None,beta=None):
-			
+		# TODO: make this accept a list of pre-training	
 		# set up the stacked autoencoders
 		self.stacked_ae = len(n_hid)*[None]
 		self.stacked_ae[0] = ae.Autoencoder(d=d,n_hid=n_hid[0],decay=sae_decay[0],rho=rho[0],beta=beta[0])
