@@ -6,7 +6,7 @@ from nnet import NeuralNetworkCore
 
 class SoftmaxClassifier(NeuralNetworkCore.Network):
 	
-	def __init__(self,d=None,k=None,n_hid=[25],decay=0.0001):
+	def __init__(self,d=None,k=None,n_hid=None,decay=None):
 		
 		# softmax classifier has sigmoid activations for the intermediate
 		# layers, and a final softmax layer

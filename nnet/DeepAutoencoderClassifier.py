@@ -8,13 +8,13 @@ from nnet import Autoencoder as ae
 
 class DeepAutoencoderClassifier(NeuralNetworkCore.Network):
 
-	def __init__(self,d=None,k=None,n_hid=[200,200],sae_decay=0.003,scl_decay=0.0001,rho=0.1,beta=3):
+	def __init__(self,d=None,k=None,n_hid=None,sae_decay=None,scl_decay=None,rho=None,beta=None):
 			
 		# set up the stacked autoencoders
 		self.stacked_ae = len(n_hid)*[None]
-		self.stacked_ae[0] = ae.Autoencoder(d=d,n_hid=n_hid[0],decay=sae_decay,rho=rho,beta=beta)
+		self.stacked_ae[0] = ae.Autoencoder(d=d,n_hid=n_hid[0],decay=sae_decay[0],rho=rho[0],beta=beta[0])
 		for i,(n1,n2) in enumerate(zip(n_hid[:-1],n_hid[1:])):
-				self.stacked_ae[i+1] = ae.Autoencoder(d=n1,n_hid=n2,decay=sae_decay,rho=rho,beta=beta)
+				self.stacked_ae[i+1] = ae.Autoencoder(d=n1,n_hid=n2,decay=sae_decay[i],rho=rho[i],beta=beta[i])
 
 		# define the activation functions for the full network
 		self.activ = len(n_hid)*[nu.sigmoid]+[nu.softmax]
@@ -25,23 +25,19 @@ class DeepAutoencoderClassifier(NeuralNetworkCore.Network):
 		# define the hyper parameters for fine-tuning
 		self.decay = scl_decay
 
-	def fit(self,X=None,y=None,x_data=None,method='L-BFGS',n_iter=None,learn_rate=0.5,alpha=0.9):
-		''' fits the deep autoenocder after applying pre-training - this is known as 'fine-tuning' '''
-		if not X == None:
-			self.pre_train(X,method=method,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
-			NeuralNetworkCore.Network.fit(self,X,y,method=method,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
-
-	def pre_train(self,X=None,x_data=None,method='L-BFGS',n_iter=None,learn_rate=0.5,alpha=0.9):
+	def pre_train(self,X=None,x_data=None,method='L-BFGS',n_iter=None,learn_rate=None,alpha=None):
+		''' Pre-training using autoencoders - might need to make this more flexible by allowing 
+		for arbitrary functions to do the pre-training '''
 		
-		if not X == None:
+		if X is not None:
 			# train the first autoencoder
-			self.stacked_ae[0].fit(X,method=method,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
+			self.stacked_ae[0].fit(X,method=method,n_iter=n_iter[0],learn_rate=learn_rate[0],alpha=alpha[0])
 			X_tf = self.stacked_ae[0].transform(X)
 			self.wts_[0] = self.stacked_ae[0].wts_[0] # initialize the weights with the encoding weights
 
 			# train the subsequent autoencoders
 			for i,ae in enumerate(self.stacked_ae[1:]):
-				ae.fit(X_tf,method=method,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
+				ae.fit(X_tf,method=method,n_iter=n_iter[i],learn_rate=learn_rate[i],alpha=alpha[i])
 				self.wts_[i+1] = ae.wts_[0]
 				X_tf = ae.transform(X_tf)
 

@@ -6,7 +6,7 @@ from nnet import NeuralNetworkCore
 
 class Autoencoder(NeuralNetworkCore.Network):
 	
-	def __init__(self,d=None,n_hid=25,decay=0.0001,rho=0.01,beta=3):
+	def __init__(self,d=None,n_hid=None,decay=None,rho=None,beta=None):
 	
 		# set the activation functions
 		self.activ = [nu.sigmoid,nu.sigmoid]
@@ -19,7 +19,7 @@ class Autoencoder(NeuralNetworkCore.Network):
 		self.rho = rho # activation constraint
 		self.beta = beta # sparsity coefficient
 
-	def corrupt_input(X,method='masking',p=0.2):
+	def corrupt_input(X,method='masking',p=None):
 		''' Corrupts the input - this makes it a 'de-noising' classifier '''
 	
 	def cost_function(self,X,y,wts=None,bs=None):
@@ -76,7 +76,7 @@ class Autoencoder(NeuralNetworkCore.Network):
 		
 		return dE_dW,dE_db
 
-	def fit(self,X=None,x_data=None,method='L-BFGS',n_iter=None,learn_rate=0.5,alpha=0.9):
+	def fit(self,X=None,x_data=None,method='L-BFGS',n_iter=None,learn_rate=None,alpha=None):
 		''' See NeuralNetworkCore,Network.fit for a description of fit. 
 		This function simply calls the super-class version but with y = X'''
 		return NeuralNetworkCore.Network.fit(self,X=X,y=X,x_data=x_data,method=method,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
