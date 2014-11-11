@@ -5,8 +5,8 @@
 
 import idx2numpy
 import numpy as  np
-import Autoencoder as ae
-import SoftmaxClassifier as scl
+from nnet import Autoencoder as ae
+from nnet import SoftmaxClassifier as scl
 
 # define the paths
 train_img_path = '/home/avasbr/datasets/MNIST/train-images.idx3-ubyte'

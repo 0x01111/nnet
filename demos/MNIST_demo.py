@@ -48,6 +48,7 @@ for i,idx in enumerate(test_lbl):
 	y_te[idx,i] = 1
 
 # Neural network initialization parameters
+
 nnet_params = {"n_hid":[100],"decay":0.0}
 grad_descent_params = {"n_iter": 1000,"learn_rate":0.9,"plot_val_curves":True,"val_idx":10}
 #grad_descent_params = {"n_iter": 1000,"learn_rate":0.35}

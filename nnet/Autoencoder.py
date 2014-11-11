@@ -29,6 +29,7 @@ class Autoencoder(NeuralNetworkCore.Network):
 			bs = self.bts_
  		
  		avg_act = np.mean(self.act[0],axis=1)
+
 		
 		# compute each of the individual costs
 		main_cost = 0.5*np.mean(np.sum((y-self.act[1])**2,axis=0))
@@ -101,8 +102,8 @@ class Autoencoder(NeuralNetworkCore.Network):
 		X_r:	reconstructed features
 				d x m matrix m = # of training samples, d = # of features		
 		'''
-		
 		self.fprop(X)
+
 		X_t = self.act[0]
 		X_r = self.act[1]
 		

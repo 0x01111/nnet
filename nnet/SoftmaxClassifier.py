@@ -25,6 +25,7 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 
 		#  E = 1/N*sum(-y*log(p)) - negative log probability of the right answer
 		E = np.mean(np.sum(-1.0*y*np.log(self.act[-1]),axis=0)) + 0.5*self.decay*sum([np.sum(w**2) for w in wts])
+
 		return E
 
 	def fprop(self,X,wts=None,bs=None):
@@ -69,6 +70,7 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 				dE_dz = dE_da*a*(1-a) # no connection to the bias node
 		dE_dW[-1] = 1./m*np.dot(dE_dz,X.T) + self.decay*wts[-1]
 		dE_db[-1] = 1./m*np.sum(dE_dz,axis=1)[:,np.newaxis]
+
 
 		# re-reverse and return - the reason we return here is because there will be occassion
 		# to know what the derivative at arbitrary weights/biases/inputs are
