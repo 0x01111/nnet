@@ -18,12 +18,8 @@ d = row*col # dimensions
 X_tr = np.reshape(train_img[:num_img],(num_img,d)).T/255. # train data matrix
 
 # Neural network initialization parameters
-n_hid = 196
-decay = 0.003
-beta = 3
-rho = 0.1
-n_iter = 400
-method = 'L-BFGS-B'
+nnet_params = {"n_hid":196,"decay"=0.003,"beta":3,"rho":0.1}
+optim_params = {"method":"L-BFGS-B","n_iter":400}
 
 print 'Sparse Autoencoder applied to MNIST data\n'
 

@@ -50,9 +50,8 @@ for i,idx in enumerate(test_lbl):
 # Neural network initialization parameters
 
 nnet_params = {"n_hid":[100],"decay":0.0}
-grad_descent_params = {"n_iter": 1000,"learn_rate":0.9,"plot_val_curves":True,"val_idx":10}
-#grad_descent_params = {"n_iter": 1000,"learn_rate":0.35}
-method = 'gradient_descent'
+# optim_param = {"method":"SGD","n_iter": 1000,"learn_rate":0.9,"plot_val_curves":True,"val_idx":10}
+optim_param = {"method":"L-BFGS-B","n_iter":1000}
 
 # for gradient descent-based optimization algorithms
 def x_data():
@@ -71,13 +70,13 @@ print 'Number of samples for training:',m_tr
 print 'Number of samples for testing:',m_te,'\n'
 
 dp.pretty_print("Neural Network parameters",**nnet_params)
-dp.pretty_print("Optimization parameters",**grad_descent_params)
+dp.pretty_print("Optimization parameters",**optim_param)
 
 print 'Setting up the softmax classifier...'
 # softmax regression if we don't provide hidden units
 nnet = scl.SoftmaxClassifier(d=d,k=k,**nnet_params)
 print 'Training...\n'
-nnet.fit(X=X_tr,y=y_tr,x_data=x_data,method=method,X_val=X_val,y_val=y_val,**grad_descent_params)
+nnet.fit(X=X_tr,y=y_tr,x_data=x_data,X_val=X_val,y_val=y_val,**optim_param)
 pred,mce_te = nnet.predict(X_te,y_te)
 
 print 'Performance:'

@@ -11,6 +11,7 @@ from nnet.common import nnetutils as nu
 from nnet.optim import nnetoptim as nopt
 import scipy.optimize
 import cPickle
+import sys
 
 class Network(object):
 
@@ -74,7 +75,7 @@ class Network(object):
 			self.wts_ = wts
 			self.bs_ = bs
 
-	def fit(self,X=None,y=None,x_data=None,X_val=None,y_val=None,method=None,**method_params):
+	def fit(self,X=None,y=None,x_data=None,X_val=None,y_val=None,**method_params):
 		'''Fits the weights of the neural network
 
 		Parameters:
@@ -104,6 +105,20 @@ class Network(object):
 		self.bs_
 
 		'''
+		def method_err():
+			err_msg = ('No method provided to fit! Your choices are:'
+						'\n(1) CG: Conjugate gradient'+
+						'\n(2) L-BFGS-B: Limited-memory BFGS'+
+						'\n(3) SGD: stochastic gradient descent'+
+						'\n(4) SGDm: stochastic gradient descent with momentum'
+						'\n(5) SGDim: an improved version of SGDm')
+			return err_msg
+
+		if 'method' not in method_params or method_params['method'] is None:
+			sys.exit(method_err())
+		
+		method = method_params['method']
+		del method_params['method']
 		w0 = nu.unroll(self.wts_,self.bs_)
 
 		if method == 'CG':
@@ -116,7 +131,7 @@ class Network(object):
 				options={'maxiter':method_params['n_iter']})
 			self.wts_,self.bs_ = nu.reroll(wf.x,self.n_nodes)
 		
-		elif method == 'gradient_descent':
+		elif method == 'SGD':
 			self.wts_,self.bs_ = nopt.gradient_descent(self.wts_,self.bs_,self.compute_cost_grad,
 				X=X,y=y,x_data=x_data,X_val=X_val,y_val=y_val,compute_cost=self.compute_cost,**method_params)
 
@@ -128,7 +143,7 @@ class Network(object):
 			self.wts_,self.bs_ = nopt.improved_momentum(self.wts_,self.bs_,self.compute_cost_grad,
 				X=X,y=y,x_data=x_data,X_val=X_val,y_val=y_val,compute_cost=self.compute_cost,**method_params)
 		else:
-			print 'Method does not exist, check your code'
+			print method_err()
 
 		return self
 	

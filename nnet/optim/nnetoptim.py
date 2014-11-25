@@ -7,7 +7,7 @@ from nnet.common import dataproc as dp
 
 def gradient_descent(wts,bs,compute_cost_grad,X=None,y=None,x_data=None,n_iter=None,learn_rate=None,
 	plot_val_curves=False,X_val=None,y_val=None,compute_cost=None,val_idx=None):
-	'''Simple, full-batch gradient descent
+	'''Simple, mini-batch stochastic gradient descent
 	
 	Parameters:
 	-----------
@@ -37,6 +37,7 @@ def gradient_descent(wts,bs,compute_cost_grad,X=None,y=None,x_data=None,n_iter=N
 	# in case we decide to do some validation
 	val_err = []
 	tr_err = []
+	
 	# full-batch gradient descent
 	if x_data is None and X is not None and y is not None:
 		for i in range(n_iter):

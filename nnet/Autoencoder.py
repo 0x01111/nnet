@@ -30,7 +30,6 @@ class Autoencoder(NeuralNetworkCore.Network):
  		
  		avg_act = np.mean(self.act[0],axis=1)
 
-		
 		# compute each of the individual costs
 		main_cost = 0.5*np.mean(np.sum((y-self.act[1])**2,axis=0))
 		decay_cost = 0.5*self.decay*sum([np.sum(w**2) for w in wts])
@@ -77,9 +76,9 @@ class Autoencoder(NeuralNetworkCore.Network):
 		
 		return dE_dW,dE_db
 
-	def fit(self,X=None,x_data=None,method='L-BFGS',n_iter=None,learn_rate=None,alpha=None):
-		''' See NeuralNetworkCore,Network.fit for a description of fit. 
-		This function simply calls the super-class version but with y = X'''
+	def fit(self,X=None,x_data=None,method=None,n_iter=None,learn_rate=None,alpha=None):
+		''' See NeuralNetworkCore,Network.fit for a proper description - this simply calls the super class
+		version but with y = X'''
 		return NeuralNetworkCore.Network.fit(self,X=X,y=X,x_data=x_data,method=method,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 		# return super(Autoencoder,self).fit(X=X,y=X,x_data=x_data,method=method,n_iter=n_iter,learn_rate=learn_rate,alpha=alpha)
 
