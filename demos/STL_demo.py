@@ -61,51 +61,46 @@ print 'Data:'
 print '-----'
 print 'Number of samples for training:',m_l
 print 'Number of samples for testing:',m_te,'\n'
+
 print 'Part 1: Softmax regression on raw pixels\n'
 
-print 'Parameters:'
-print '-----------'
-print 'Input feature size:',d
-print 'Output dimension:',k_tr
-print 'Decay term:',scl_decay
-print 'Optimization method:',method
-print 'Max iterations:',n_iter,'\n'
+# define a simple softmax regression model 
+scl_params = {'d':d,'k':k_tr,'n_hid':[],'decay':0.0001}
+dp.pretty_print('Softmax classifier',scl_params)
+scl_optim_params = {'method':'L-BFGS-B','n_iter':400}
+dp.pretty_print('Optimization routine')
 
-print 'Training a softmax classifier...\n'
-nnet = scl.SoftmaxClassifier(d=d,k=k_tr,n_hid=scl_hid,decay=scl_decay)
-pred,mce = nnet.fit(X_tr,y_tr,method=method,n_iter=n_iter).predict(X_te,y_te)
+# define the network, run the model, and report the performance
+nnet = scl.SoftmaxClassifier(**scl_params)
+pred,mce = nnet.fit(X_tr,y_tr,**optim_params)
+
 print 'Performance'
 print '-----------'
 print 'Accuracy:',100*(1-mce),'%\n'
 
 print 'Part 2: Softmax regression on learned features via autoencoders\n'
 
-print 'Parameters:'
-print '-----------'
-print '- Autoencoder -'
-print 'Input feature size:',d
-print 'Number of hidden units:',sae_hid
-print 'Decay term:',sae_decay
-print 'Sparsity term:',rho
-print 'Beta:',beta
-print 'Optimization method:',method
-print 'Max iterations:',n_iter,'\n'
+# define all the architectures
+sae_params = {'d':d,'n_hid':200,'decay':0.003,'beta':3,'rho':0.1}
+sae_optim_params = {'method':'L-BFGS-B','n_iter':1000}
+scl_params = {'d':200,'k':k_tr,'n_hid':[],'decay':0.0001}
+scl_optim_params = {'method':'L-BFGS-B','n_iter':n_iter}
 
-print '- Softmax -'
-print 'Input feature size:',sae_hid
-print 'Output dimension:',k_tr
-print 'Decay term:',scl_decay
-print 'Optimization method:',method
-print 'Max iterations:',n_iter,'\n'
+# print everything to console
+dp.pretty_print("Autoencoder parameters:",sae_params)
+dp.pretty_print("Autoencoder optimization paramters:",sae_optim_params)
+dp.pretty_print('Softmax parameters',scl_params)
+dp.pretty_print('Softmax optimization parameters',scl_optim_params)
 
-print 'Applying a sparse autoencoder to learn features...'
-sae_net = ae.Autoencoder(d=d,n_hid=sae_hid,decay=sae_decay,beta=beta,rho=rho)
-sae_net.fit(X_ul,method=method,n_iter=n_iter)
+# run the autoencoders first, transform the data, and then apply the softmax classifier
+sae_net = ae.Autoencoder(**sae_params)
+sae_net.fit(X_ul,**sae_optim_params)
 X_tr_tfm = sae_net.transform(X_tr)
 X_te_tfm = sae_net.transform(X_te)
-nnet = scl.SoftmaxClassifier(d=sae_hid,k=k_tr,n_hid=scl_hid,decay=scl_decay)
-print 'Training a softmax classifier on learned features...\n'
-pred,mce = nnet.fit(X_tr_tfm,y_tr,method=method,n_iter=n_iter).predict(X_te_tfm,y_te)
+scl_net = scl.SoftmaxClassifier(**scl_params)
+pred,mce = nnet.fit(X_tr_tfm,y_tr,**scl_optim_params).predict(X_te_tfm,y_te)
+
+# apply a softmax classifier
 print 'Performance'
 print '-----------'
 print 'Accuracy:',100*(1-mce)

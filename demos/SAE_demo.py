@@ -97,22 +97,20 @@ print 'Data:'
 print '------'
 print 'Number of samples for training:',n,'\n'
 
-# Define the neural network parameters
-nnet_params = {"n_hid":25,"decay":0.0001,"beta":3,"rho":0.01}
-dp.pretty_print("Autoencoder parameters",**nnet_params)
+# define the neural network parameters and optimization criteria
+nnet_params = {'n_hid':25,'decay':0.0001,'beta':3,'rho':0.01}
+optim_params = {'method':'L-BFGS-B','n_iter':400}
 
-# Define the optimizer
-method = "L-BFGS-B"
-lbfgs_params = {"n_iter":400}
-dp.pretty_print("Optimization parameters",**lbfgs_params)
+# print out to console
+dp.pretty_print('Autoencoder parameters',nnet_params)
+dp.pretty_print('Optimization parameters',lbfgs_params)
 
-print 'Applying a sparse autoencoder to the data...'
-sae = ae.Autoencoder(d=d,**nnet_params)
-sae.fit(X,method=method,**lbfgs_params)
+# apply the model
+sae = ae.Autoencoder(d=d,**nnet_params) 
+sae.fit(X,**optim_params)
 X_r = sae.transform(X,'reconstruct')
 X_max = sae.compute_max_activations()
 
-print 'Displaying maximum activations for hidden nodes'
 np.savez('image_bases',X_max=X_max)
 files = np.load('image_bases.npz')
 X_max = files['X_max']

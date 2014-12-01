@@ -1,10 +1,13 @@
 Major items in this commit
 --------------------------
-- Switched everything over to W,b
+- Tested (almost) all the demos with the new way of passing in parameters (via dictionaries) - everything seems
+ to be working so far. Next commit will have tested everything, and will probably be the last for a little while. 
+ Going to switch over to Theano because it seems like a better framework for testing neural network architectures.
+ The need for writing my own gradient is going to get tricky when I want to play with different activation functions, 
+ cost functions, etc. Better to just have that bit be computed for me.
 
 Backlog (major items):
 ----------------------
-- Add in the concept of an "epoch"
 - Add early stopping 
 - look into packing/deprecation and clean up directory structure
 - start profiling code
@@ -19,7 +22,3 @@ Ongoing:
 - Design considerations
 - Application to other major datasets
 - Start adding in hyperopt methods - look into Ryan Adams paper?
-
-Thoughts/Concerns:
--------------------
-

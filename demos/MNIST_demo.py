@@ -8,10 +8,10 @@ from nnet.common import dataproc as dp
 
 # define the paths
 print 'Loading data...'
-train_img_path = '/home/avasbr/datasets/MNIST/train-images.idx3-ubyte'
-train_lbl_path = '/home/avasbr/datasets/MNIST/train-labels.idx1-ubyte' 
-test_img_path = '/home/avasbr/datasets/MNIST/t10k-images.idx3-ubyte' 
-test_lbl_path = '/home/avasbr/datasets/MNIST/t10k-labels.idx1-ubyte'
+train_img_path = '/home/avasbr/Desktop/data/train-images.idx3-ubyte'
+train_lbl_path = '/home/avasbr/Desktop/data/train-labels.idx1-ubyte' 
+test_img_path = '/home/avasbr/Desktop/data/t10k-images.idx3-ubyte' 
+test_lbl_path = '/home/avasbr/Desktop/data/t10k-labels.idx1-ubyte'
 
 # convert the raw images into feature vectors
 train_img = idx2numpy.convert_from_file(train_img_path)
@@ -47,12 +47,6 @@ y_te = np.zeros((k,m_te))
 for i,idx in enumerate(test_lbl):
 	y_te[idx,i] = 1
 
-# Neural network initialization parameters
-
-nnet_params = {"n_hid":[100],"decay":0.0}
-# optim_param = {"method":"SGD","n_iter": 1000,"learn_rate":0.9,"plot_val_curves":True,"val_idx":10}
-optim_param = {"method":"L-BFGS-B","n_iter":1000}
-
 # for gradient descent-based optimization algorithms
 def x_data():
 	batch_size = 300
@@ -69,21 +63,23 @@ print '-----'
 print 'Number of samples for training:',m_tr
 print 'Number of samples for testing:',m_te,'\n'
 
-dp.pretty_print("Neural Network parameters",**nnet_params)
-dp.pretty_print("Optimization parameters",**optim_param)
+# define the architecture
+nnet_params = {'d':d,'k':k,'n_hid':[],'decay':0.0} # initialize parameters
+optim_params = {'method':'L-BFGS-B','n_iter':400} # define optimization routine
+# optim_params = {"method":"SGD","n_iter": 200,"learn_rate":0.9,"plot_val_curves":True,"val_idx":10}
 
-print 'Setting up the softmax classifier...'
-# softmax regression if we don't provide hidden units
-nnet = scl.SoftmaxClassifier(d=d,k=k,**nnet_params)
-print 'Training...\n'
-nnet.fit(X=X_tr,y=y_tr,x_data=x_data,X_val=X_val,y_val=y_val,**optim_param)
+# print to console
+dp.pretty_print('Neural Network parameters',nnet_params)
+dp.pretty_print('Optimization parameters',optim_params)
+
+# fit the model to the data and report performance
+nnet = scl.SoftmaxClassifier(**nnet_params) # define the network
+nnet.fit(X=X_tr,y=y_tr,x_data=x_data,X_val=X_val,y_val=y_val,**optim_params) # train
 pred,mce_te = nnet.predict(X_te,y_te)
 
 print 'Performance:'
 print '------------'
 print 'Accuracy:',100.*(1-mce_te),'%'
-
-# nnet.display_hinton_diagram()
 
 # print 'Saving the model'
 # fname = '/home/bhargav/Desktop/mnist_softmax_network.pickle'

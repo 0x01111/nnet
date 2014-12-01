@@ -18,7 +18,7 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		# set hyperparameters
 		self.decay = decay # regularization coefficient
 
-	def cost_function(self,X,y,wts=None,bs=None):
+	def cost_function(self,y,wts=None,bs=None):
 		if wts is None and bs is None:
 			wts = self.wts_
 			bs = self.bs_
@@ -27,20 +27,6 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 		E = np.mean(np.sum(-1.0*y*np.log(self.act[-1]),axis=0)) + 0.5*self.decay*sum([np.sum(w**2) for w in wts])
 
 		return E
-
-	def fprop(self,X,wts=None,bs=None):
-		'''Performs forward propagation and computes and stores intermediate activation values'''
-		
-		# technically one could provide one and not the other, but that person would have to be
-		# an ass
-		if wts is None and bs is None:
-			wts = self.wts_
-			bs = self.bs_
-
-		self.act[0] = self.activ[0](np.dot(wts[0],X) + bs[0]) # use the first data matrix to compute the first activation
-		if len(wts) > 1: # len(wts) = 1 corresponds to softmax regression
-			for i,(w,b,activ) in enumerate(zip(wts[1:],bs[1:],self.activ[1:])):
-				self.act[i+1] = activ(np.dot(w,self.act[i]) + b)
 
 	def bprop(self,X,y,wts=None,bs=None):
 		'''Back-propagation for L2-regularized cross-entropy cost function'''
@@ -70,7 +56,6 @@ class SoftmaxClassifier(NeuralNetworkCore.Network):
 				dE_dz = dE_da*a*(1-a) # no connection to the bias node
 		dE_dW[-1] = 1./m*np.dot(dE_dz,X.T) + self.decay*wts[-1]
 		dE_db[-1] = 1./m*np.sum(dE_dz,axis=1)[:,np.newaxis]
-
 
 		# re-reverse and return - the reason we return here is because there will be occassion
 		# to know what the derivative at arbitrary weights/biases/inputs are

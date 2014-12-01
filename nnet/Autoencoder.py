@@ -22,7 +22,7 @@ class Autoencoder(NeuralNetworkCore.Network):
 	def corrupt_input(X,method='masking',p=None):
 		''' Corrupts the input - this makes it a 'de-noising' classifier '''
 	
-	def cost_function(self,X,y,wts=None,bs=None):
+	def cost_function(self,y,wts=None,bs=None):
 		
 		if wts is None and bs is None:
 			wts = self.wts_
@@ -37,20 +37,6 @@ class Autoencoder(NeuralNetworkCore.Network):
 			(1-self.rho)*np.log((1-self.rho)/(1-avg_act)))
 		E = main_cost + decay_cost + sparsity_cost
 		return E
-
-	def fprop(self,X,wts=None,bs=None):
-		'''Performs forward propagation and computes and stores intermediate activation values'''
-		
-		# technically one could provide one and not the other, but that person would have to be
-		# an ass
-		if wts is None and bs is None:
-			wts = self.wts_
-			bs = self.bs_
-
-		self.act[0] = self.activ[0](np.dot(wts[0],X) + bs[0]) # use the first data matrix to compute the first activation
-		if len(wts) > 1: # len(wts) = 1 corresponds to softmax regression
-			for i,(w,b,activ) in enumerate(zip(wts[1:],bs[1:],self.activ[1:])):
-				self.act[i+1] = activ(np.dot(w,self.act[i]) + b)
 
 	def bprop(self,X,y,wts=None,bs=None):
 		'''Performs back-proparation to compute the gradients with respect to the weights. Assumes that

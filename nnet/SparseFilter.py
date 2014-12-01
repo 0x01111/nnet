@@ -16,7 +16,13 @@ class SparseFilter:
 	def transform(self,X):
 		return np.dot(self.wts_.T,X)
 
-	def compute_cost(self,X,wts=None):
+	# def fprop(self,X,wts=None,bs=None):
+	# 	if wts == None:
+	# 		wts = self.wts_
+
+	# 	self.F = np.dot(wts.T,X)
+
+	def compute_cost(self,y,wts=None):
 		''' computes the objective function as well as some intermediate 
 		values needed to compute the gradient
 

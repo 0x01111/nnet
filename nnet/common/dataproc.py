@@ -31,7 +31,7 @@ def plot_curves(tr_err,val_err):
 	plt.legend()
 	plt.show()
 
-def pretty_print(header,**params):
+def pretty_print(header,params):
 	print header
 	print '-'*len(header)
 	for k,v in params.iteritems():

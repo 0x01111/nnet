@@ -147,6 +147,20 @@ class Network(object):
 
 		return self
 	
+	def fprop(self,X,wts=None,bs=None):
+		'''Performs forward propagation and computes and stores intermediate activation values'''
+		
+		# technically one could provide one and not the other, but that person would have to be
+		# an ass
+		if wts is None and bs is None:
+			wts = self.wts_
+			bs = self.bs_
+
+		self.act[0] = self.activ[0](np.dot(wts[0],X) + bs[0]) # use the first data matrix to compute the first activation
+		if len(wts) > 1: # len(wts) = 1 corresponds to softmax regression
+			for i,(w,b,activ) in enumerate(zip(wts[1:],bs[1:],self.activ[1:])):
+				self.act[i+1] = activ(np.dot(w,self.act[i]) + b)
+			
 	# the following methods are 'conveninence' functions needed for various optimization methods that are called
 	# by the fit method
 
@@ -157,9 +171,8 @@ class Network(object):
 			wts = self.wts_
 			bs = self.bs_
 
-		self.fprop(X,wts,bs)
-		
-		return self.cost_function(X,y,wts,bs)
+		self.fprop(X,wts,bs) # this function updates the activation functions
+		return self.cost_function(y,wts,bs)
 
 	def compute_cost_grad(self,X,y,wts=None,bs=None):
 		''' convenience function; performs fprop and bprop and returns the cost and gradient values.
